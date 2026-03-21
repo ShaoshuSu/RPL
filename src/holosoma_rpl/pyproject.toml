@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "holosoma-rpl"
+version = "0.1.0"
+description = "Simulator extension for holosoma with depth camera and image server support"
+requires-python = ">=3.10"
+dependencies = [
+    "holosoma",
+    "opencv-python",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
