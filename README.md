@@ -93,6 +93,15 @@ platform; `bash rpl_sim2sim/run_sim.sh --robot.init-state.pos 0 -2 0.8` starts i
 facing the stairs. Distillation runs export `model_XXXXX.onnx` next to each checkpoint; pass one
 with `--task.model-path`.
 
+FAR-FALCON-Terrains' own sim env is also vendored (`rpl_sim2sim/falcon_sim`: its `BaseSimulator` /
+`LocoManipCamSimulator`, Unitree `sdk2py` bridge, elastic band and depth image server, with FALCON's MJCF and
+resolved config). Run it in place of `run_sim.sh`, with the same `run_policy.sh`:
+
+```bash
+bash rpl_sim2sim/run_falcon_sim.sh                 # FALCON's course, Xbox pad; --no-joystick, --spawn 0 -2 0.8
+CONDA_ROOT=~/.falcon_deps/miniconda3 SIM_ENV=fcreal bash rpl_sim2sim/run_falcon_sim.sh   # in FALCON's env (MuJoCo 3.9)
+```
+
 Headless closed-loop check (walks the stairs, stones and platform, reports the pelvis track):
 
 ```bash
