@@ -1,75 +1,108 @@
-# holosoma-extension-rpl
+# RPL: FALCON-Terrains on Holosoma
 
-Private extension for [holosoma](https://github.com/amazon-far/holosoma) adding depth camera sim2sim and sim2real support for the G1 robot with loco-manip policy.
+Per-terrain RL experts and multi-depth DAgger distillation for the Unitree G1 (29 DoF),
+reproducing FAR-FALCON-Terrains on top of [Holosoma](https://github.com/amazon-far/holosoma).
+
+The repo follows the [php_parkour](https://github.com/amazon-far/php_parkour) layout:
+
+| Path | Contents |
+|---|---|
+| `thirdparty/holosoma` | Holosoma, pinned to branch `zyuanhan/rpl-release-port` (core features RPL needs, on top of the PHP release port's warp depth sensor) |
+| `rpl_training/` | Everything outside Holosoma core: loco-manipulation env, manager terms, presets, launchers, assets |
+| `rpl_training/data/` | FALCON ACCAD upper-body clips and the four FALCON MoE teacher checkpoints (`moe_cnn/falcon_20251105`) |
+| `rpl_sim2sim/` | Sim2sim: FAR-FALCON-Terrains' MuJoCo environment (sim side) and the depth student for `holosoma_inference` (policy side), plus two reference student exports |
+
+What lives where:
+
+- **Holosoma core (`zyuanhan/rpl-release-port`)**: warp ray-cast camera manager (delay buffer, D435i noise,
+  pose / FOV randomization, robot self-occlusion), observation push intervals / history across resets /
+  time-major history, multi-agent reward routing, PPO-MA, DAgger / DAgger-MA / DAgger-MA-MoE, MoE / ViT /
+  channel-token CNN modules, FALCON terrains and heightfield lookups, terrain levels, foothold sampler,
+  body-group control delay and DR changes, IsaacSim heightfield tiles.
+- **`rpl_training`**: `envs/` (loco-manip env + end-effector forces), `terms/` (command, curriculum,
+  observation, reward, termination), `config_values/` (FALCON presets), `training_runs/` (launchers), `tests/`.
 
 ## Setup
 
 ```bash
-git clone --recurse-submodules <this-repo-url>
-cd holosoma-extension-rpl
-
-# Simulator environment (hsmujoco-rpl)
-bash scripts/setup_mujoco.sh            # with GPU
-bash scripts/setup_mujoco.sh --no-warp  # CPU-only
-
-# Inference environment (hsinference-rpl)
-bash scripts/setup_inference.sh
+git clone --recurse-submodules https://github.com/amazon-far/RPL.git
+cd RPL
+SIM=isaacgym bash rpl_training/training_runs/setup_env.sh   # or SIM=isaacsim
 ```
 
-## Sim2sim
+`SIM=isaacgym` (FALCON's simulator, conda env `hsgym`) is the default; `SIM=isaacsim` uses `hssim`.
+`ENV_NAME` overrides the env name and `HOLOSOMA_LOCAL_DIR` another holosoma checkout. Launchers log to
+W&B by default (`LOGGER=disabled` keeps logs local under `logs/`).
 
-**Terminal 1 — Simulator:**
+## Train the RL experts
+
 ```bash
-source scripts/source_mujoco_setup.sh
-python -m holosoma_rpl.run_sim robot:g1-29dof terrain:terrain_locomotion_stairs--simulator.config.bridge.enabled=True
+NGPUS=4 EXPERT=stones bash rpl_training/training_runs/run_expert.sh --training.name stones-expert
+NGPUS=4 EXPERT=stairs bash rpl_training/training_runs/run_expert.sh --training.name stairs-expert
+NGPUS=4 EXPERT=slopes bash rpl_training/training_runs/run_expert.sh --training.name slopes-expert
 ```
 
-**Terminal 2 — Policy:**
+Presets: `exp:g1-29dof-falcon-hm-force-falcon-{stones,stairs,slopes}` reproduce the run args of
+FALCON's final expert stages (`falcon-29-terrains-experts-stones/lrlo8qpt`,
+`falcon-29-terrains-experts/h5d52hm0`, `falcon-29-terrains-experts/b04ael3p`): terrain mix, reward
+weights / masks, friction, base COM, IMU and heightmap noise, stair tread width, rough slopes with
+1 m tile spacing. They train from scratch with the curricula on and no lower-body control delay,
+where FALCON fine-tuned from earlier stages. Their base,
+`exp:g1-29dof-falcon-hm-force-falcon` (FALCON `+exp=falcon_hm_multi_terrain algo=ppo_ma_hm_cnn`),
+takes the terrain mix on the CLI.
+
+## Distill the multi-depth student
+
 ```bash
-source scripts/source_inference_setup.sh
-python -m holosoma_rpl_inference.run_policy inference:g1-29dof-loco-manip-stand-height-waist
+NGPUS=8 bash rpl_training/training_runs/run_distill.sh --training.name rpl-student
 ```
 
-## Working with the Submodule
+Preset: `exp:g1-29dof-falcon-hm-force-falcon-distill` (FALCON `+exp=falcon_hm_dagger_moe
+algo=dagger_ma_moe_hm_cnn_depth_vtr`). It loads the shipped FALCON teachers by default; use
+`--algo.config.ckpt-teacher DIR` (same per-terrain layout) or `--algo.config.ckpt-teacher-wandb.<terrain> wandb://...`
+for your own experts.
 
-This repo uses `holosoma` as a git submodule under `thirdparty/holosoma`.
+`--training.num-envs` is the total across GPUs. Presets default to FALCON's totals (experts 4096 x 4 GPUs,
+slopes expert 4096 total as in FALCON, student 1024 x 8 GPUs).
 
-**First time setup** (if you cloned without `--recurse-submodules`):
+The presets are also registered as Holosoma entry points, so after `pip install -e .`
+`python -m holosoma.train_agent exp:g1-29dof-falcon-hm-force-falcon ...` works too.
+
+## Sim2sim (MuJoCo)
+
+The environment is FAR-FALCON-Terrains' `sim2real/run_sim.py task=loco_manip/loco_manip_cam` with
+`scene_g1_29dof_terrains_freebase_real.xml`: FALCON's course (stairs, two-column stepping stones,
+platforms, 10-degree slope) and G1 model, physics + PD at 200 Hz, FALCON's motor limits, and front +
+back depth cameras at FALCON's poses (240x135, vertical FOV 69 deg) published at 10 Hz as one
+`[2, 1, 27, 48]` shared-memory block with FALCON's image-server processing and a 1-frame delay (FALCON's `depth_delay`).
+
 ```bash
-git submodule update --init --recursive
+bash rpl_sim2sim/setup_env.sh          # conda envs rplmujoco (sim) + rplinference (policy)
+bash rpl_sim2sim/run_sim.sh            # terminal 1: FALCON course, Xbox pad on this host
+bash rpl_sim2sim/run_policy.sh         # terminal 2: shipped student (or --task.model-path X.onnx)
 ```
 
-**Pull latest submodule changes from remote:**
+Once both are up, release the gantry (`9` in the MuJoCo window) and start the policy right away.
+Xbox pad (FALCON's mapping, the default): `start` start, `A+X` init pose, `R2` stand/walk, left
+stick forward speed, right stick yaw, `L2` zero velocity, `B+Y` stop, `B+up/down` base height,
+`Y`/`select` + d-pad waist. For the keyboard instead, add
+`--simulator.config.bridge.use-joystick False` to `run_sim.sh` and
+`--task.velocity-input keyboard --task.state-input keyboard` to `run_policy.sh`; then `]` start,
+`i` init pose, `=` walk, `w/s/a/d` velocity, `q/e` yaw, `o` stop. FALCON spawns the robot on the stair
+platform; `bash rpl_sim2sim/run_sim.sh --robot.init-state.pos 0 -2 0.8` starts it on the floor
+facing the stairs. Distillation runs export `model_XXXXX.onnx` next to each checkpoint; pass one
+with `--task.model-path`.
+
+Headless closed-loop check (walks the stairs, stones and platform, reports the pelvis track):
+
 ```bash
-git submodule update --remote thirdparty/holosoma
-git add thirdparty/holosoma
-git commit -m "Update holosoma submodule to latest"
+~/.holosoma_deps/miniconda3/envs/rplmujoco/bin/python -m rpl_sim2sim.closed_loop_check \
+    --policy-python ~/.holosoma_deps/miniconda3/envs/rplinference/bin/python [--model-path X.onnx]
 ```
 
-**Make changes to the submodule and submit a PR:**
+## Tests
+
 ```bash
-cd thirdparty/holosoma
-git checkout -b my-feature
-# make changes, commit them
-git push origin my-feature
-# → open PR on github.com/amazon-far/holosoma
+python -m pytest rpl_training/tests   # FALCON parity tests for terms, terrains, modules, warp camera
+python -m pytest rpl_sim2sim/tests    # sim2sim: sim side in rplmujoco, policy side in rplinference
 ```
-
-After the PR is merged, update the parent repo to point to the new commit:
-```bash
-cd ../..
-git add thirdparty/holosoma
-git commit -m "Update holosoma submodule after my-feature merged"
-git push
-```
-
-> **Note:** The parent repo stores a pointer to a specific submodule commit. Any time the submodule moves to a new commit, you need to `git add` + `git commit` in the parent repo to update that pointer.
-
-## Architecture
-
-This repo uses `holosoma` as a git submodule under `thirdparty/` and extends it with two pip-installable packages:
-
-- **`holosoma_rpl`** — Simulator extension: depth camera injection into MuJoCo, image server (shared memory streaming), extended terrain configs
-- **`holosoma_rpl_inference`** — Inference extension: `LocoManipStandHeightWaitDepthPolicy`, camera/observation/task configs, ONNX model
-
-Config classes inherit from holosoma's base configs (`RplRunSimConfig` extends `RunSimConfig`, `RplInferenceConfig` extends `InferenceConfig`). Runtime behavior (camera injection, image server threading) is applied via lightweight patches in `patches.py`.
