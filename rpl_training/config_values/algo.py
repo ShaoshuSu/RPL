@@ -250,7 +250,7 @@ _VTR_DEPTH_LAYER_LOWER = LayerConfig(
     use_vision_mask=True,
     vision_mask_input_name="command_lin_vel_obs",
     vision_mask_k=4.0,
-    vision_mask_v_th=0.05,
+    vision_mask_v_th=0.2,
     vision_mask_hard_cutoff=0.1,
     # CNN tokeniser geometry. Two cameras, depth resized to 48x27 by default.
     num_cameras=2,
