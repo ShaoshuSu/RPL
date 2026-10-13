@@ -17,11 +17,11 @@ test = ["pytest"]
 # Registers the presets with Holosoma's config registries, so they also show up in
 # ``python -m holosoma.train_agent`` once this package is installed.
 [project.entry-points."holosoma.config.experiment"]
-g1_29dof_falcon_hm_force_falcon = "rpl_training.config_values.experiment:g1_29dof_falcon_hm_force_falcon"
-g1_29dof_falcon_hm_force_falcon_stones = "rpl_training.config_values.experiment:g1_29dof_falcon_hm_force_falcon_stones"
-g1_29dof_falcon_hm_force_falcon_stairs = "rpl_training.config_values.experiment:g1_29dof_falcon_hm_force_falcon_stairs"
-g1_29dof_falcon_hm_force_falcon_slopes = "rpl_training.config_values.experiment:g1_29dof_falcon_hm_force_falcon_slopes"
-g1_29dof_falcon_hm_force_falcon_distill = "rpl_training.config_values.experiment:g1_29dof_falcon_hm_force_falcon_distill"
+g1_29dof_rpl_expert = "rpl_training.config_values.experiment:g1_29dof_rpl_expert"
+g1_29dof_rpl_expert_stones = "rpl_training.config_values.experiment:g1_29dof_rpl_expert_stones"
+g1_29dof_rpl_expert_stairs = "rpl_training.config_values.experiment:g1_29dof_rpl_expert_stairs"
+g1_29dof_rpl_expert_slopes = "rpl_training.config_values.experiment:g1_29dof_rpl_expert_slopes"
+g1_29dof_rpl_distill = "rpl_training.config_values.experiment:g1_29dof_rpl_distill"
 
 [project.entry-points."holosoma.config.camera_manager"]
 warp_dual_depth_cameras_falcon = "rpl_training.config_values.camera:warp_dual_depth_cameras_falcon"

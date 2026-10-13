@@ -8,10 +8,10 @@ import pytest
 from holosoma.utils.safe_torch_import import torch
 
 from rpl_training.config_values.observation import (
-    g1_29dof_falcon_hm_depth_distill_falcon,
     g1_29dof_falcon_hm_history_wolinvel,
-    g1_29dof_falcon_hm_history_wolinvel_falcon,
-    g1_29dof_falcon_hm_history_wolinvel_falcon_hm_noise,
+    g1_29dof_rpl_depth_distill,
+    g1_29dof_rpl_history_wolinvel,
+    g1_29dof_rpl_history_wolinvel_hm_noise,
 )
 from rpl_training.terms.observation import command_base_height, ee_apply_force
 
@@ -41,7 +41,7 @@ def test_command_base_height_absolute():
 
 def test_falcon_expert_obs_preset():
     base = g1_29dof_falcon_hm_history_wolinvel.groups
-    groups = g1_29dof_falcon_hm_history_wolinvel_falcon.groups
+    groups = g1_29dof_rpl_history_wolinvel.groups
     assert list(groups) == list(base)
     for name, group in groups.items():
         # FALCON never clears history on reset; layout and history lengths are unchanged.
@@ -64,13 +64,13 @@ def test_falcon_expert_obs_preset():
     for name in ("perception_obs", "perception_obs_wo_noise"):
         assert groups[name].terms["height_measurements"].noise == 0.0
     # Stones / slopes experts: heightmap noise 0.1, critic heightmap at noise_level 0.1.
-    hm = g1_29dof_falcon_hm_history_wolinvel_falcon_hm_noise.groups
+    hm = g1_29dof_rpl_history_wolinvel_hm_noise.groups
     assert hm["perception_obs"].terms["height_measurements"].noise == 0.1
     assert hm["perception_obs_wo_noise"].enable_noise
     assert hm["perception_obs_wo_noise"].terms["height_measurements"].noise == pytest.approx(0.01)
     assert hm["actor_state_obs"] == groups["actor_state_obs"]
     # The distill teacher obs keep FALCON's dagger_moe settings (no IMU noise).
-    teacher = g1_29dof_falcon_hm_depth_distill_falcon.groups["actor_teacher_state_obs"].terms
+    teacher = g1_29dof_rpl_depth_distill.groups["actor_teacher_state_obs"].terms
     assert (teacher["base_ang_vel"].noise, teacher["projected_gravity"].noise) == (0.0, 0.0)
     # Base preset untouched.
     assert base["actor_state_obs"].reset_history_on_env_reset is True

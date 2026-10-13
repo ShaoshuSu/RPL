@@ -11,7 +11,7 @@ rpl_launcher_init
 rpl_activate_sim
 rpl_training_command
 exec "${TRAIN_COMMAND[@]}" -m rpl_training.train_agent \
-    exp:g1-29dof-falcon-hm-force-falcon-distill "${SIM_ARGS[@]}" \
+    exp:g1-29dof-rpl-distill "${SIM_ARGS[@]}" \
     --training.headless True \
     "${LOGGER_ARGS[@]}" \
     "$@"

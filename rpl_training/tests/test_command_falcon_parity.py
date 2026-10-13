@@ -12,13 +12,13 @@ from holosoma.utils.safe_torch_import import torch
 
 from rpl_training.config_values.command import (
     g1_29dof_falcon_hm_command,
-    g1_29dof_falcon_hm_command_falcon,
-    g1_29dof_falcon_hm_command_falcon_distill,
+    g1_29dof_rpl_command_distill,
+    g1_29dof_rpl_command_expert,
 )
 from rpl_training.config_values.curriculum import (
     g1_29dof_falcon_hm_force_curriculum,
-    g1_29dof_falcon_hm_force_curriculum_falcon,
-    g1_29dof_falcon_hm_force_curriculum_falcon_distill,
+    g1_29dof_rpl_curriculum_distill,
+    g1_29dof_rpl_curriculum_expert,
 )
 from rpl_training.envs.loco_manip_force_manager import (
     _DEFAULT_FORCE_CONFIG,
@@ -79,7 +79,7 @@ def _per_terrain(env, values: torch.Tensor) -> dict[str, float]:
 def test_falcon_stand_and_tapping_distribution_per_terrain():
     torch.manual_seed(0)
     env = _make_env()
-    term = _make_command(g1_29dof_falcon_hm_command_falcon_distill, env)
+    term = _make_command(g1_29dof_rpl_command_distill, env)
     term._resample(torch.arange(env.num_envs))
     cmds = term.commands
 
@@ -106,7 +106,7 @@ def test_falcon_stand_and_tapping_distribution_per_terrain():
 def test_falcon_yaw_zero_on_stones_and_tapping_follows_heading():
     torch.manual_seed(0)
     env = _make_env(n_per=2000)
-    term = _make_command(g1_29dof_falcon_hm_command_falcon_distill, env)
+    term = _make_command(g1_29dof_rpl_command_distill, env)
     term.lin_vel_deadband = 0.0
     term._resample(torch.arange(env.num_envs))
     cmds = term.commands
@@ -129,7 +129,7 @@ def test_falcon_yaw_zero_on_stones_and_tapping_follows_heading():
 def test_falcon_waist_zero_fix_rates_and_stance_gating():
     torch.manual_seed(0)
     env = _make_env()
-    term = _make_command(g1_29dof_falcon_hm_command_falcon_distill, env)
+    term = _make_command(g1_29dof_rpl_command_distill, env)
     term._resample(torch.arange(env.num_envs))
     cmds = term.commands
     stance = cmds[:, 4] == 0
@@ -159,7 +159,7 @@ def test_default_preset_unchanged_behaviour():
 
 
 def test_falcon_mode_rejects_velocity_stand_flag():
-    cfg = deepcopy(g1_29dof_falcon_hm_command_falcon_distill.setup_terms["locomotion_command"])
+    cfg = deepcopy(g1_29dof_rpl_command_distill.setup_terms["locomotion_command"])
     cfg.params["stand_flag_from_velocity"] = True
     with pytest.raises(ValueError, match="mutually exclusive"):
         HeadingLocomotionCommand(cfg, _make_env(n_per=1))
@@ -199,9 +199,7 @@ def _make_upper_term(params: dict, n: int = 4000):
 
 
 def test_upper_body_lookahead_fix_and_reset_pose():
-    term, env = _make_upper_term(
-        dict(g1_29dof_falcon_hm_command_falcon_distill.setup_terms["upper_body_ref_pose"].params)
-    )
+    term, env = _make_upper_term(dict(g1_29dof_rpl_command_distill.setup_terms["upper_body_ref_pose"].params))
     idx = torch.arange(env.num_envs)
     env.episode_length_buf[:] = 9
     torch.manual_seed(0)
@@ -233,7 +231,7 @@ def test_upper_body_defaults_preserve_legacy_time():
 
 
 def test_force_config_plumbing():
-    tyro_cfg = SimpleNamespace(command=g1_29dof_falcon_hm_command_falcon_distill)
+    tyro_cfg = SimpleNamespace(command=g1_29dof_rpl_command_distill)
     cfg = LeggedRobotLocoManipForceManager._resolve_force_config(tyro_cfg)
     assert tuple(cfg["apply_force_z_range"]) == (-100.0, 5.0)
     assert tuple(cfg["zero_force_prob"]) == (1.0, 1.0, 0.25)
@@ -266,8 +264,8 @@ def test_force_extend_point_interpolation():
 
 
 def test_falcon_distill_curriculum_preset():
-    terms = g1_29dof_falcon_hm_force_curriculum_falcon_distill.setup_terms
-    assert g1_29dof_falcon_hm_force_curriculum_falcon_distill.params["num_compute_average_epl"] == 10000
+    terms = g1_29dof_rpl_curriculum_distill.setup_terms
+    assert g1_29dof_rpl_curriculum_distill.params["num_compute_average_epl"] == 10000
     cmd = terms["command_scale_curriculum"].params
     assert cmd["command_height_scale_initial_scale"] == 0.1
     assert (cmd["command_height_scale_up"], cmd["command_height_scale_down"]) == (0.05, 0.025)
@@ -297,7 +295,7 @@ EXPERT_STAND_PROB = {
 def test_falcon_expert_stand_tapping_yaw_and_waist():
     torch.manual_seed(0)
     env = _make_env(names=EXPERT_TERRAINS)
-    term = _make_command(g1_29dof_falcon_hm_command_falcon, env)
+    term = _make_command(g1_29dof_rpl_command_expert, env)
     term.lin_vel_deadband = 0.0
     term._resample(torch.arange(env.num_envs))
     cmds = term.commands
@@ -325,14 +323,12 @@ def test_falcon_expert_stand_tapping_yaw_and_waist():
 
 
 def test_falcon_expert_force_config_and_upper_body():
-    cfg = LeggedRobotLocoManipForceManager._resolve_force_config(
-        SimpleNamespace(command=g1_29dof_falcon_hm_command_falcon)
-    )
+    cfg = LeggedRobotLocoManipForceManager._resolve_force_config(SimpleNamespace(command=g1_29dof_rpl_command_expert))
     assert tuple(cfg["apply_force_z_range"]) == (-60.0, 5.0)
     assert cfg["dof_effort_limit_scale"] == 1.0  # experts set robot.dof_effort_limit_scale=1.0
     assert cfg["apply_force_pos_mode"] == "hand_to_extend"
-    expert = g1_29dof_falcon_hm_command_falcon.setup_terms
-    distill = g1_29dof_falcon_hm_command_falcon_distill.setup_terms
+    expert = g1_29dof_rpl_command_expert.setup_terms
+    distill = g1_29dof_rpl_command_distill.setup_terms
     assert expert["upper_body_ref_pose"].params == distill["upper_body_ref_pose"].params
     # Shared builder kept the distill preset's values.
     loco = distill["locomotion_command"].params
@@ -342,8 +338,8 @@ def test_falcon_expert_force_config_and_upper_body():
 
 
 def test_falcon_expert_curriculum_preset():
-    terms = g1_29dof_falcon_hm_force_curriculum_falcon.setup_terms
-    assert g1_29dof_falcon_hm_force_curriculum_falcon.params["num_compute_average_epl"] == 10000
+    terms = g1_29dof_rpl_curriculum_expert.setup_terms
+    assert g1_29dof_rpl_curriculum_expert.params["num_compute_average_epl"] == 10000
     cmd = terms["command_scale_curriculum"].params
     for key in ("command_height_scale", "waist_command_scale", "upper_body_motion_scale"):
         assert (cmd[f"{key}_up"], cmd[f"{key}_down"]) == (0.02, 0.02)

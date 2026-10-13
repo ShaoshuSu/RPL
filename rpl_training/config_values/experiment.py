@@ -1,7 +1,7 @@
 """RPL / FALCON-Terrains experiment presets (G1 29-DoF loco-manipulation).
 
-``g1_29dof_falcon_hm_force_falcon`` trains the per-terrain RL experts and
-``g1_29dof_falcon_hm_force_falcon_distill`` distills them into the multi-depth
+``g1_29dof_rpl_expert`` trains the per-terrain RL experts and
+``g1_29dof_rpl_distill`` distills them into the multi-depth
 student. ``g1_29dof_falcon_hm`` / ``g1_29dof_falcon_hm_force`` are their bases.
 """
 
@@ -16,35 +16,35 @@ from rpl_training.config_values import algo, robot, simulator, terrain
 from rpl_training.config_values.camera import warp_dual_depth_cameras_falcon
 from rpl_training.config_values.command import (
     g1_29dof_falcon_hm_command,
-    g1_29dof_falcon_hm_command_falcon,
-    g1_29dof_falcon_hm_command_falcon_distill,
+    g1_29dof_rpl_command_distill,
+    g1_29dof_rpl_command_expert,
 )
 from rpl_training.config_values.curriculum import (
     g1_29dof_falcon_hm_curriculum,
     g1_29dof_falcon_hm_force_curriculum,
-    g1_29dof_falcon_hm_force_curriculum_falcon,
-    g1_29dof_falcon_hm_force_curriculum_falcon_distill,
+    g1_29dof_rpl_curriculum_distill,
+    g1_29dof_rpl_curriculum_expert,
 )
 from rpl_training.config_values.observation import (
-    g1_29dof_falcon_hm_depth_distill_falcon,
     g1_29dof_falcon_hm_history_wolinvel,
-    g1_29dof_falcon_hm_history_wolinvel_falcon,
-    g1_29dof_falcon_hm_history_wolinvel_falcon_hm_noise,
+    g1_29dof_rpl_depth_distill,
+    g1_29dof_rpl_history_wolinvel,
+    g1_29dof_rpl_history_wolinvel_hm_noise,
 )
 from rpl_training.config_values.randomization import (
     g1_29dof_falcon_hm_randomization,
-    g1_29dof_falcon_hm_randomization_falcon,
-    g1_29dof_falcon_hm_randomization_falcon_distill,
-    g1_29dof_falcon_hm_randomization_falcon_slopes,
-    g1_29dof_falcon_hm_randomization_falcon_stairs,
-    g1_29dof_falcon_hm_randomization_falcon_stones,
+    g1_29dof_rpl_randomization_distill,
+    g1_29dof_rpl_randomization_expert,
+    g1_29dof_rpl_randomization_expert_slopes,
+    g1_29dof_rpl_randomization_expert_stairs,
+    g1_29dof_rpl_randomization_expert_stones,
 )
 from rpl_training.config_values.reward import (
     g1_29dof_falcon_hm_reward,
-    g1_29dof_falcon_hm_reward_falcon,
-    g1_29dof_falcon_hm_reward_falcon_slopes,
-    g1_29dof_falcon_hm_reward_falcon_stairs,
-    g1_29dof_falcon_hm_reward_falcon_stones,
+    g1_29dof_rpl_reward_expert,
+    g1_29dof_rpl_reward_expert_slopes,
+    g1_29dof_rpl_reward_expert_stairs,
+    g1_29dof_rpl_reward_expert_stones,
 )
 from rpl_training.config_values.termination import g1_29dof_falcon_hm_termination
 from rpl_training.paths import DATA_DIR
@@ -126,7 +126,7 @@ g1_29dof_falcon_hm_force = replace(
 # teacher's ``ref_upper_dof_pos`` inputs come from the clips it was trained on.
 _FALCON_ARMATURE = [0.0103, 0.0251, 0.0103, 0.0251, 0.003597, 0.003597] * 2 + [0.0103] * 3 + [0.003597] * 14
 
-g1_29dof_falcon_hm_force_falcon_distill = replace(
+g1_29dof_rpl_distill = replace(
     g1_29dof_falcon_hm_force,
     robot=replace(
         g1_29dof_falcon_hm_force.robot,
@@ -138,7 +138,7 @@ g1_29dof_falcon_hm_force_falcon_distill = replace(
     ),
     training=TrainingConfig(
         project="falcon-holosoma-g1-hm-distill",
-        name="g1_29dof_falcon_hm_force_falcon_distill",
+        name="g1_29dof_rpl_distill",
         # Total across GPUs (train_agent divides by world size); FALCON's
         # ``num_envs=1024`` is per GPU, i.e. 8192 on its 8-GPU runs.
         num_envs=8192,
@@ -157,10 +157,10 @@ g1_29dof_falcon_hm_force_falcon_distill = replace(
     simulator=simulator.isaacgym_falcon,
     terrain=terrain.terrain_locomotion_multi_falcon,
     camera=warp_dual_depth_cameras_falcon,
-    observation=g1_29dof_falcon_hm_depth_distill_falcon,
-    randomization=g1_29dof_falcon_hm_randomization_falcon_distill,
-    command=g1_29dof_falcon_hm_command_falcon_distill,
-    curriculum=g1_29dof_falcon_hm_force_curriculum_falcon_distill,
+    observation=g1_29dof_rpl_depth_distill,
+    randomization=g1_29dof_rpl_randomization_distill,
+    command=g1_29dof_rpl_command_distill,
+    curriculum=g1_29dof_rpl_curriculum_distill,
 )
 
 
@@ -175,12 +175,12 @@ g1_29dof_falcon_hm_force_falcon_distill = replace(
 # of FALCON's final expert stages share (IMU noise, lower-body torque weight, hand-force
 # budget). The per-terrain experts below add the rest of their run args. ``num_envs`` is the
 # total across GPUs (FALCON's ``num_envs=4096`` on 4 GPUs is ``--training.num-envs=16384``).
-g1_29dof_falcon_hm_force_falcon = replace(
+g1_29dof_rpl_expert = replace(
     g1_29dof_falcon_hm_force,
-    robot=g1_29dof_falcon_hm_force_falcon_distill.robot,
+    robot=g1_29dof_rpl_distill.robot,
     training=TrainingConfig(
         project="falcon-holosoma-g1-hm-experts",
-        name="g1_29dof_falcon_hm_force_falcon",
+        name="g1_29dof_rpl_expert",
         num_envs=16384,
         seed=1,
     ),
@@ -196,42 +196,42 @@ g1_29dof_falcon_hm_force_falcon = replace(
     ),
     simulator=simulator.isaacgym_falcon,
     terrain=terrain.terrain_locomotion_multi_falcon_expert,
-    observation=g1_29dof_falcon_hm_history_wolinvel_falcon,
-    randomization=g1_29dof_falcon_hm_randomization_falcon,
-    command=g1_29dof_falcon_hm_command_falcon,
-    curriculum=g1_29dof_falcon_hm_force_curriculum_falcon,
-    reward=g1_29dof_falcon_hm_reward_falcon,
+    observation=g1_29dof_rpl_history_wolinvel,
+    randomization=g1_29dof_rpl_randomization_expert,
+    command=g1_29dof_rpl_command_expert,
+    curriculum=g1_29dof_rpl_curriculum_expert,
+    reward=g1_29dof_rpl_reward_expert,
 )
 
 
 def _falcon_expert(name: str, **overrides) -> ExperimentConfig:
-    training = replace(g1_29dof_falcon_hm_force_falcon.training, name=name, **overrides.pop("training", {}))
-    return replace(g1_29dof_falcon_hm_force_falcon, training=training, **overrides)
+    training = replace(g1_29dof_rpl_expert.training, name=name, **overrides.pop("training", {}))
+    return replace(g1_29dof_rpl_expert, training=training, **overrides)
 
 
 # FALCON's final expert stages (wandb run args; the curricula and the stairs lower-body
 # control delay are left at the base preset's from-scratch settings).
 # far-wandb/falcon-29-terrains-experts-stones/lrlo8qpt, 4096 x 4 GPUs.
-g1_29dof_falcon_hm_force_falcon_stones = _falcon_expert(
-    "g1_29dof_falcon_hm_force_falcon_stones",
+g1_29dof_rpl_expert_stones = _falcon_expert(
+    "g1_29dof_rpl_expert_stones",
     terrain=terrain.terrain_locomotion_falcon_expert_stones,
-    observation=g1_29dof_falcon_hm_history_wolinvel_falcon_hm_noise,
-    randomization=g1_29dof_falcon_hm_randomization_falcon_stones,
-    reward=g1_29dof_falcon_hm_reward_falcon_stones,
+    observation=g1_29dof_rpl_history_wolinvel_hm_noise,
+    randomization=g1_29dof_rpl_randomization_expert_stones,
+    reward=g1_29dof_rpl_reward_expert_stones,
 )
 # far-wandb/falcon-29-terrains-experts/h5d52hm0, 4096 x 4 GPUs.
-g1_29dof_falcon_hm_force_falcon_stairs = _falcon_expert(
-    "g1_29dof_falcon_hm_force_falcon_stairs",
+g1_29dof_rpl_expert_stairs = _falcon_expert(
+    "g1_29dof_rpl_expert_stairs",
     terrain=terrain.terrain_locomotion_falcon_expert_stairs,
-    randomization=g1_29dof_falcon_hm_randomization_falcon_stairs,
-    reward=g1_29dof_falcon_hm_reward_falcon_stairs,
+    randomization=g1_29dof_rpl_randomization_expert_stairs,
+    reward=g1_29dof_rpl_reward_expert_stairs,
 )
 # far-wandb/falcon-29-terrains-experts/b04ael3p, 4096 envs on 1 GPU (~28k fps vs ~112k).
-g1_29dof_falcon_hm_force_falcon_slopes = _falcon_expert(
-    "g1_29dof_falcon_hm_force_falcon_slopes",
+g1_29dof_rpl_expert_slopes = _falcon_expert(
+    "g1_29dof_rpl_expert_slopes",
     training={"num_envs": 4096},
     terrain=terrain.terrain_locomotion_falcon_expert_slopes,
-    observation=g1_29dof_falcon_hm_history_wolinvel_falcon_hm_noise,
-    randomization=g1_29dof_falcon_hm_randomization_falcon_slopes,
-    reward=g1_29dof_falcon_hm_reward_falcon_slopes,
+    observation=g1_29dof_rpl_history_wolinvel_hm_noise,
+    randomization=g1_29dof_rpl_randomization_expert_slopes,
+    reward=g1_29dof_rpl_reward_expert_slopes,
 )

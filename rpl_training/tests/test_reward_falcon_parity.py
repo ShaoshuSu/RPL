@@ -12,7 +12,7 @@ from holosoma.utils.safe_torch_import import torch
 
 from rpl_training.config_values.reward import (
     g1_29dof_falcon_hm_reward,
-    g1_29dof_falcon_hm_reward_falcon,
+    g1_29dof_rpl_reward_expert,
 )
 from rpl_training.terms import reward as lm
 
@@ -68,7 +68,7 @@ def _all_terrains(n_per: int = 1) -> torch.Tensor:
 
 
 def test_falcon_preset_groups_and_terms():
-    terms = g1_29dof_falcon_hm_reward_falcon.terms
+    terms = g1_29dof_rpl_reward_expert.terms
     assert "penalty_hip_roll" not in terms and "stand_still" not in terms
     assert terms["tracking_walk_base_height"].weight == 1.0
     assert all(t.ma_reward_group in ("lower_body", "upper_body") for t in terms.values())
@@ -205,7 +205,7 @@ def test_orientation_walk_only_and_close_feet_norm(monkeypatch):
 
 
 def test_feet_edge_and_foothold_falcon_params():
-    terms = g1_29dof_falcon_hm_reward_falcon.terms
+    terms = g1_29dof_rpl_reward_expert.terms
     assert terms["penalty_feet_edge"].params["use_filtered_contact"] is True
     fh = terms["penalty_foothold"]
     assert fh.func == "rpl_training.terms.reward:penalty_foothold"

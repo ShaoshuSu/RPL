@@ -25,8 +25,8 @@ from holosoma.utils.sampler import STAGE_RESET, TermSampler  # noqa: E402
 from rpl_training.config_values import simulator as _sim_presets  # noqa: E402
 from rpl_training.config_values import terrain as _terrain_presets  # noqa: E402
 from rpl_training.config_values.randomization import (  # noqa: E402
-    g1_29dof_falcon_hm_randomization_falcon,
-    g1_29dof_falcon_hm_randomization_falcon_distill,
+    g1_29dof_rpl_randomization_distill,
+    g1_29dof_rpl_randomization_expert,
 )
 
 SIM_DEFAULTS = vars(_sim_presets)
@@ -171,7 +171,7 @@ def test_ctrl_delay_mask_only_delays_selected_joints():
 
 
 def test_falcon_distill_randomization_preset():
-    setup = g1_29dof_falcon_hm_randomization_falcon_distill.setup_terms
+    setup = g1_29dof_rpl_randomization_distill.setup_terms
     delay = setup["setup_action_delay_buffers"].params
     assert delay["enabled"] and delay["ctrl_delay_step_range"] == [0, 1]
     assert delay["upper_body_ctrl_delay"] and not delay.get("lower_body_ctrl_delay", False)
@@ -317,8 +317,8 @@ def test_xy_offset_scaled_range_rounding(truncate, scale, expected_hi):
 
 
 def test_falcon_expert_randomization_preset():
-    setup = g1_29dof_falcon_hm_randomization_falcon.setup_terms
-    distill = g1_29dof_falcon_hm_randomization_falcon_distill.setup_terms
+    setup = g1_29dof_rpl_randomization_expert.setup_terms
+    distill = g1_29dof_rpl_randomization_distill.setup_terms
     assert setup["randomize_friction_startup"].params["friction_range"] == [0.25, 1.25]
     assert not setup["randomize_base_com_startup"].params["enabled"]
     assert setup["randomize_base_com_startup"].params["base_com_range"]["x"] == [-0.025, 0.025]
@@ -373,9 +373,9 @@ def test_directional_slope_roughness():
 def test_falcon_per_terrain_expert_presets():
     from rpl_training.config_values import experiment
 
-    stones = experiment.g1_29dof_falcon_hm_force_falcon_stones
-    stairs = experiment.g1_29dof_falcon_hm_force_falcon_stairs
-    slopes = experiment.g1_29dof_falcon_hm_force_falcon_slopes
+    stones = experiment.g1_29dof_rpl_expert_stones
+    stairs = experiment.g1_29dof_rpl_expert_stairs
+    slopes = experiment.g1_29dof_rpl_expert_slopes
     for exp, mix in (
         (stones, {"stepping_stones_columns"}),
         (stairs, {"stairs_up", "stairs_down"}),
@@ -387,7 +387,7 @@ def test_falcon_per_terrain_expert_presets():
         rs = exp.randomization.setup_terms
         assert rs["randomize_base_com_startup"].params["enabled"]
         assert not rs["setup_action_delay_buffers"].params["lower_body_ctrl_delay"]
-        assert exp.curriculum == experiment.g1_29dof_falcon_hm_force_falcon.curriculum
+        assert exp.curriculum == experiment.g1_29dof_rpl_expert.curriculum
     assert stairs.terrain.terrain_term.step_width_range == [0.25, 0.30]
     assert slopes.terrain.terrain_term.slopes_roughness and slopes.terrain.terrain_term.max_slope == 0.75
     assert not stairs.terrain.terrain_term.slopes_roughness

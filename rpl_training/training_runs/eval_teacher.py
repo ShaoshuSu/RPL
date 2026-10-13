@@ -21,7 +21,7 @@ from pathlib import Path
 
 import rpl_training.config_values.registry  # noqa: F401  (registers the presets)
 
-EXPERIMENT = "exp:g1-29dof-falcon-hm-force-falcon-distill"
+EXPERIMENT = "exp:g1-29dof-rpl-distill"
 
 
 def main() -> None:

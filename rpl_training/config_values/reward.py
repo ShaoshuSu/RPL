@@ -470,7 +470,7 @@ _falcon_terms.update(
     }
 )
 
-g1_29dof_falcon_hm_reward_falcon = MultiAgentRewardManagerCfg(
+g1_29dof_rpl_reward_expert = MultiAgentRewardManagerCfg(
     only_positive_rewards=g1_29dof_falcon_hm_reward.only_positive_rewards,
     multi_agent_body_keys=g1_29dof_falcon_hm_reward.multi_agent_body_keys,
     terms=_falcon_terms,
@@ -480,17 +480,17 @@ g1_29dof_falcon_hm_reward_falcon = MultiAgentRewardManagerCfg(
 def _falcon_expert_reward(
     weights: dict[str, float], params: dict[str, dict] | None = None
 ) -> MultiAgentRewardManagerCfg:
-    terms = dict(g1_29dof_falcon_hm_reward_falcon.terms)
+    terms = dict(g1_29dof_rpl_reward_expert.terms)
     for name, weight in weights.items():
         terms[name] = replace(terms[name], weight=weight)
     for name, extra in (params or {}).items():
         terms[name] = replace(terms[name], params={**terms[name].params, **extra})
-    return replace(g1_29dof_falcon_hm_reward_falcon, terms=terms)
+    return replace(g1_29dof_rpl_reward_expert, terms=terms)
 
 
 # Per-terrain reward overrides of FALCON's final expert stages (wandb run args):
 # stones far-wandb/falcon-29-terrains-experts-stones/lrlo8qpt.
-g1_29dof_falcon_hm_reward_falcon_stones = _falcon_expert_reward(
+g1_29dof_rpl_reward_expert_stones = _falcon_expert_reward(
     {
         "penalty_feet_ori": -0.25,
         "penalty_contact_no_vel": -1.0,
@@ -502,7 +502,7 @@ g1_29dof_falcon_hm_reward_falcon_stones = _falcon_expert_reward(
     params={"penalty_feet_ori": {"terrain_type_mask": [*_FALCON_FEET_ORI_MASK, "stepping_stones_columns"]}},
 )
 # stairs far-wandb/falcon-29-terrains-experts/h5d52hm0.
-g1_29dof_falcon_hm_reward_falcon_stairs = _falcon_expert_reward(
+g1_29dof_rpl_reward_expert_stairs = _falcon_expert_reward(
     {
         "penalty_feet_ori": -1.0,
         "penalty_stumble": -50.0,
@@ -511,7 +511,7 @@ g1_29dof_falcon_hm_reward_falcon_stairs = _falcon_expert_reward(
     }
 )
 # slopes far-wandb/falcon-29-terrains-experts/b04ael3p.
-g1_29dof_falcon_hm_reward_falcon_slopes = _falcon_expert_reward(
+g1_29dof_rpl_reward_expert_slopes = _falcon_expert_reward(
     {
         "penalty_contact_no_vel": -1.0,
         "tracking_lin_vel_x": 6.0,
@@ -520,8 +520,8 @@ g1_29dof_falcon_hm_reward_falcon_slopes = _falcon_expert_reward(
 
 __all__ = [
     "g1_29dof_falcon_hm_reward",
-    "g1_29dof_falcon_hm_reward_falcon",
-    "g1_29dof_falcon_hm_reward_falcon_slopes",
-    "g1_29dof_falcon_hm_reward_falcon_stairs",
-    "g1_29dof_falcon_hm_reward_falcon_stones",
+    "g1_29dof_rpl_reward_expert",
+    "g1_29dof_rpl_reward_expert_slopes",
+    "g1_29dof_rpl_reward_expert_stairs",
+    "g1_29dof_rpl_reward_expert_stones",
 ]

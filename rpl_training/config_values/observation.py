@@ -276,7 +276,7 @@ _falcon_critic_terms = _falcon_abs_height(_base_groups["critic_state_obs"].terms
 _falcon_critic_terms["dof_pos"] = replace(_falcon_critic_terms["dof_pos"], noise=0.001)
 _falcon_critic_terms["dof_vel"] = replace(_falcon_critic_terms["dof_vel"], noise=0.01)
 
-g1_29dof_falcon_hm_depth_distill_falcon = replace(
+g1_29dof_rpl_depth_distill = replace(
     g1_29dof_falcon_hm_depth_distill,
     groups={
         **g1_29dof_falcon_hm_depth_distill.groups,
@@ -329,9 +329,9 @@ def _with_imu_noise(terms: dict[str, ObsTermCfg], level: float) -> dict[str, Obs
 #   * FALCON never clears observation history on env reset;
 #   * IMU noise base_ang_vel 0.2 / projected_gravity 0.05 (critic x0.1: 0.02 / 0.005);
 #   * critic noise_level 0.1 (dof_pos 0.001, dof_vel 0.01). The heightmaps stay noise-free
-#     (the stairs expert); :data:`g1_29dof_falcon_hm_history_wolinvel_falcon_hm_noise` adds
+#     (the stairs expert); :data:`g1_29dof_rpl_history_wolinvel_hm_noise` adds
 #     the stones / slopes experts' heightmap noise.
-g1_29dof_falcon_hm_history_wolinvel_falcon = replace(
+g1_29dof_rpl_history_wolinvel = replace(
     g1_29dof_falcon_hm_history_wolinvel,
     groups={
         "actor_state_obs": replace(
@@ -362,16 +362,16 @@ def _with_hm_noise(groups: dict, noise: float) -> dict:
 
 
 # Stones / slopes experts: ``obs.noise_scales.height_measurements=0.1``.
-g1_29dof_falcon_hm_history_wolinvel_falcon_hm_noise = replace(
-    g1_29dof_falcon_hm_history_wolinvel_falcon,
-    groups=_with_hm_noise(g1_29dof_falcon_hm_history_wolinvel_falcon.groups, 0.1),
+g1_29dof_rpl_history_wolinvel_hm_noise = replace(
+    g1_29dof_rpl_history_wolinvel,
+    groups=_with_hm_noise(g1_29dof_rpl_history_wolinvel.groups, 0.1),
 )
 
 
 __all__ = [
     "g1_29dof_falcon_hm_depth_distill",
-    "g1_29dof_falcon_hm_depth_distill_falcon",
+    "g1_29dof_rpl_depth_distill",
     "g1_29dof_falcon_hm_history_wolinvel",
-    "g1_29dof_falcon_hm_history_wolinvel_falcon",
-    "g1_29dof_falcon_hm_history_wolinvel_falcon_hm_noise",
+    "g1_29dof_rpl_history_wolinvel",
+    "g1_29dof_rpl_history_wolinvel_hm_noise",
 ]

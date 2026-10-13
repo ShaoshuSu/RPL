@@ -144,7 +144,7 @@ def _build_falcon_distill_setup_terms() -> dict:
     return out
 
 
-g1_29dof_falcon_hm_force_curriculum_falcon_distill = CurriculumManagerCfg(
+g1_29dof_rpl_curriculum_distill = CurriculumManagerCfg(
     params={"num_compute_average_epl": 10000},
     setup_terms=_build_falcon_distill_setup_terms(),
     reset_terms={},
@@ -166,7 +166,7 @@ def _build_falcon_setup_terms() -> dict:
     return out
 
 
-g1_29dof_falcon_hm_force_curriculum_falcon = CurriculumManagerCfg(
+g1_29dof_rpl_curriculum_expert = CurriculumManagerCfg(
     params={"num_compute_average_epl": 10000},
     setup_terms=_build_falcon_setup_terms(),
     reset_terms={},
@@ -176,6 +176,6 @@ g1_29dof_falcon_hm_force_curriculum_falcon = CurriculumManagerCfg(
 __all__ = [
     "g1_29dof_falcon_hm_curriculum",
     "g1_29dof_falcon_hm_force_curriculum",
-    "g1_29dof_falcon_hm_force_curriculum_falcon",
-    "g1_29dof_falcon_hm_force_curriculum_falcon_distill",
+    "g1_29dof_rpl_curriculum_expert",
+    "g1_29dof_rpl_curriculum_distill",
 ]

@@ -1,7 +1,7 @@
 """RPL / FALCON-Terrains depth student for ``holosoma_inference``.
 
 Runs the decoupled lower/upper-body student exported by DAgger-MA distillation
-(``exp:g1-29dof-falcon-hm-force-falcon-distill``) and FALCON-Terrains' own depth exports:
+(``exp:g1-29dof-rpl-distill``) and FALCON-Terrains' own depth exports:
 
 * ONNX inputs ``actor_obs_lower_body = [actor_obs | perception_obs | command_lin_vel_obs]`` and
   ``actor_obs_upper_body = actor_obs``, output ``action`` [29] in motor order;

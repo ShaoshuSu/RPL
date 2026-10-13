@@ -42,13 +42,13 @@ NGPUS=4 EXPERT=stairs bash rpl_training/training_runs/run_expert.sh --training.n
 NGPUS=4 EXPERT=slopes bash rpl_training/training_runs/run_expert.sh --training.name slopes-expert
 ```
 
-Presets: `exp:g1-29dof-falcon-hm-force-falcon-{stones,stairs,slopes}` reproduce the run args of
+Presets: `exp:g1-29dof-rpl-expert-{stones,stairs,slopes}` reproduce the run args of
 FALCON's final expert stages (`falcon-29-terrains-experts-stones/lrlo8qpt`,
 `falcon-29-terrains-experts/h5d52hm0`, `falcon-29-terrains-experts/b04ael3p`): terrain mix, reward
 weights / masks, friction, base COM, IMU and heightmap noise, stair tread width, rough slopes with
 1 m tile spacing. They train from scratch with the curricula on and no lower-body control delay,
 where FALCON fine-tuned from earlier stages. Their base,
-`exp:g1-29dof-falcon-hm-force-falcon` (FALCON `+exp=falcon_hm_multi_terrain algo=ppo_ma_hm_cnn`),
+`exp:g1-29dof-rpl-expert` (FALCON `+exp=falcon_hm_multi_terrain algo=ppo_ma_hm_cnn`),
 takes the terrain mix on the CLI.
 
 ## Distill the multi-depth student
@@ -57,7 +57,7 @@ takes the terrain mix on the CLI.
 NGPUS=8 bash rpl_training/training_runs/run_distill.sh --training.name rpl-student
 ```
 
-Preset: `exp:g1-29dof-falcon-hm-force-falcon-distill` (FALCON `+exp=falcon_hm_dagger_moe
+Preset: `exp:g1-29dof-rpl-distill` (FALCON `+exp=falcon_hm_dagger_moe
 algo=dagger_ma_moe_hm_cnn_depth_vtr`). It loads the shipped FALCON teachers by default; use
 `--algo.config.ckpt-teacher DIR` (same per-terrain layout) or `--algo.config.ckpt-teacher-wandb.<terrain> wandb://...`
 for your own experts.
@@ -66,7 +66,7 @@ for your own experts.
 slopes expert 4096 total as in FALCON, student 1024 x 8 GPUs).
 
 The presets are also registered as Holosoma entry points, so after `pip install -e .`
-`python -m holosoma.train_agent exp:g1-29dof-falcon-hm-force-falcon ...` works too.
+`python -m holosoma.train_agent exp:g1-29dof-rpl-expert ...` works too.
 
 ## Sim2sim (MuJoCo)
 

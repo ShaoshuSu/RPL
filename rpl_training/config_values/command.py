@@ -115,7 +115,7 @@ def _with_falcon_task(
 
 # ``+exp=falcon_hm_dagger_moe`` (depth distillation): stand_prob .4 / .2 / .2 / .2 on
 # slopes / stairs_up / stairs_down / stones, no yaw on stones, force z in [-100, 5].
-g1_29dof_falcon_hm_command_falcon_distill = _with_falcon_task(
+g1_29dof_rpl_command_distill = _with_falcon_task(
     g1_29dof_falcon_hm_command,
     stand_prob_terrain={
         "slopes": 0.4,
@@ -135,7 +135,7 @@ g1_29dof_falcon_hm_command_falcon_distill = _with_falcon_task(
 # 1.0 effort-limit budget. Lists both Holosoma's 50/50 ``slopes`` bucket and the
 # directional ``slope_up`` / ``slope_down`` types FALCON trains its slopes expert on.
 _FALCON_SLOPES = ["slopes", "slope_up", "slope_down"]
-g1_29dof_falcon_hm_command_falcon = _with_falcon_task(
+g1_29dof_rpl_command_expert = _with_falcon_task(
     g1_29dof_falcon_hm_command,
     stand_prob_terrain={
         **dict.fromkeys(_FALCON_SLOPES, 0.4),
@@ -154,6 +154,6 @@ g1_29dof_falcon_hm_command_falcon = _with_falcon_task(
 
 __all__ = [
     "g1_29dof_falcon_hm_command",
-    "g1_29dof_falcon_hm_command_falcon",
-    "g1_29dof_falcon_hm_command_falcon_distill",
+    "g1_29dof_rpl_command_expert",
+    "g1_29dof_rpl_command_distill",
 ]

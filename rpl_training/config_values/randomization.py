@@ -130,7 +130,7 @@ _setup = g1_29dof_falcon_hm_randomization.setup_terms
 #   - friction U[-0.1, 1.0] (64 buckets, FALCON passes negatives through as-is)
 #   - base COM offset x +/-0.025, y/z +/-0.05 on torso_link
 #   - added base mass U[-1, 3] kg on pelvis; link mass scale U[0.9, 1.2]
-g1_29dof_falcon_hm_randomization_falcon_distill = replace(
+g1_29dof_rpl_randomization_distill = replace(
     g1_29dof_falcon_hm_randomization,
     setup_terms={
         **_setup,
@@ -158,10 +158,10 @@ g1_29dof_falcon_hm_randomization_falcon_distill = replace(
 # friction U[0.25, 1.25], base COM off by default (the slopes / stones experts enable it
 # on the CLI), and the height-scan XY offset scaled with FALCON's ``int()`` truncation by
 # the DR-scale curriculum (the stairs expert enables it on the CLI).
-g1_29dof_falcon_hm_randomization_falcon = replace(
-    g1_29dof_falcon_hm_randomization_falcon_distill,
+g1_29dof_rpl_randomization_expert = replace(
+    g1_29dof_rpl_randomization_distill,
     setup_terms={
-        **g1_29dof_falcon_hm_randomization_falcon_distill.setup_terms,
+        **g1_29dof_rpl_randomization_distill.setup_terms,
         "height_measurements_xy_offset": _with_params(
             _setup["height_measurements_xy_offset"], truncate_scaled_range=True
         ),
@@ -169,7 +169,7 @@ g1_29dof_falcon_hm_randomization_falcon = replace(
             _setup["randomize_friction_startup"], friction_range=[0.25, 1.25], enabled=True
         ),
         "randomize_base_com_startup": _with_params(
-            g1_29dof_falcon_hm_randomization_falcon_distill.setup_terms["randomize_base_com_startup"],
+            g1_29dof_rpl_randomization_distill.setup_terms["randomize_base_com_startup"],
             enabled=False,
         ),
     },
@@ -179,9 +179,9 @@ g1_29dof_falcon_hm_randomization_falcon = replace(
 def _falcon_expert_randomization(friction_range: list[float], height_xy_offset: bool = False):
     """FALCON's final expert stages (wandb run args): ``domain_rand.friction_range``,
     ``randomize_base_com=True`` and, for stairs, ``randomize_height_measurements_xy_offset_points``."""
-    terms = g1_29dof_falcon_hm_randomization_falcon.setup_terms
+    terms = g1_29dof_rpl_randomization_expert.setup_terms
     return replace(
-        g1_29dof_falcon_hm_randomization_falcon,
+        g1_29dof_rpl_randomization_expert,
         setup_terms={
             **terms,
             "randomize_friction_startup": _with_params(
@@ -195,15 +195,15 @@ def _falcon_expert_randomization(friction_range: list[float], height_xy_offset: 
     )
 
 
-g1_29dof_falcon_hm_randomization_falcon_stones = _falcon_expert_randomization([-0.6, 1.0])
-g1_29dof_falcon_hm_randomization_falcon_stairs = _falcon_expert_randomization([-0.6, 1.0], height_xy_offset=True)
-g1_29dof_falcon_hm_randomization_falcon_slopes = _falcon_expert_randomization([-0.1, 1.0])
+g1_29dof_rpl_randomization_expert_stones = _falcon_expert_randomization([-0.6, 1.0])
+g1_29dof_rpl_randomization_expert_stairs = _falcon_expert_randomization([-0.6, 1.0], height_xy_offset=True)
+g1_29dof_rpl_randomization_expert_slopes = _falcon_expert_randomization([-0.1, 1.0])
 
 __all__ = [
     "g1_29dof_falcon_hm_randomization",
-    "g1_29dof_falcon_hm_randomization_falcon",
-    "g1_29dof_falcon_hm_randomization_falcon_distill",
-    "g1_29dof_falcon_hm_randomization_falcon_slopes",
-    "g1_29dof_falcon_hm_randomization_falcon_stairs",
-    "g1_29dof_falcon_hm_randomization_falcon_stones",
+    "g1_29dof_rpl_randomization_expert",
+    "g1_29dof_rpl_randomization_distill",
+    "g1_29dof_rpl_randomization_expert_slopes",
+    "g1_29dof_rpl_randomization_expert_stairs",
+    "g1_29dof_rpl_randomization_expert_stones",
 ]

@@ -352,7 +352,7 @@ dagger_ma_moe_cnn_depth_vtr = replace(
 # as :data:`dagger_ma_moe_cnn_depth_vtr` (checked against FALCON's resolved config), plus the
 # two FALCON tokeniser details: channel tokens (32 tokens x 18 cells * 2 cameras, vision
 # pos-encoding ``[1, 32, 64]``) and independently initialised per-camera CNN branches.
-# Pair with ``observation:g1-29dof-falcon-hm-depth-distill-falcon`` (5-frame state history).
+# Pair with ``observation:g1-29dof-rpl-depth-distill`` (5-frame state history).
 _VTR_DEPTH_LAYER_LOWER_FALCON = replace(
     _VTR_DEPTH_LAYER_LOWER,
     vision_tokens="channel",
