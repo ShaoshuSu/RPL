@@ -1,6 +1,6 @@
 <mujoco model="g1_29dof">
 <!-- FAR-FALCON-Terrains humanoidverse/data/robots/g1/g1_29dof_freebase.xml; meshes from Holosoma's G1 (byte-identical). -->
-  <compiler angle="radian" meshdir="../../../thirdparty/holosoma/src/holosoma/holosoma/data/robots/g1/meshes" />
+  <compiler angle="radian" meshdir="../../thirdparty/holosoma/src/holosoma/holosoma/data/robots/g1/meshes" />
 
   <default>
     <default class="torso_motor">

@@ -1,6 +1,6 @@
 """``holosoma_inference`` presets for the RPL / FALCON-Terrains depth student.
 
-``inference:g1-29dof-rpl-depth`` pairs with ``python -m rpl_sim2sim.run_sim`` (the FALCON sim2sim
+``inference:g1-29dof-rpl-depth`` pairs with ``python -m rpl_sim2sim.run_sim`` (FALCON's sim2sim
 environment). Robot gains, stand pose, action scale and observation layout follow FALCON's
 ``loco_manip_cam`` / ``g1_29dof_depth`` sim2sim configs, which are also what the distillation
 preset trains against.
@@ -115,10 +115,10 @@ rpl_depth_task = replace(
 rpl_dual_depth = CameraConfig(
     poses={
         "cam_front_depth": CameraPose(
-            parent_link="torso_link", camera_offset=(0.135, 0.06, 0.02), camera_rotation=(0.0, 75.0, 0.0)
+            parent_link="torso_link", camera_offset=(0.15, 0.06, 0.02), camera_rotation=(0.0, 75.0, 0.0)
         ),
         "cam_back_depth": CameraPose(
-            parent_link="torso_link", camera_offset=(-0.125, -0.06, 0.02), camera_rotation=(0.0, 75.0, 180.0)
+            parent_link="torso_link", camera_offset=(-0.13, -0.06, 0.02), camera_rotation=(0.0, 75.0, 180.0)
         ),
     },
     props=CameraProps(

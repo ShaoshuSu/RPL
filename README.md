@@ -70,11 +70,13 @@ The presets are also registered as Holosoma entry points, so after `pip install 
 
 ## Sim2sim (MuJoCo)
 
-The environment is FAR-FALCON-Terrains' `sim2real/run_sim.py task=loco_manip/loco_manip_cam` with
-`scene_g1_29dof_terrains_freebase_real.xml`: FALCON's course (stairs, two-column stepping stones,
-platforms, 10-degree slope) and G1 model, physics + PD at 200 Hz, FALCON's motor limits, and front +
-back depth cameras at FALCON's poses (240x135, vertical FOV 69 deg) published at 10 Hz as one
-`[2, 1, 27, 48]` shared-memory block with FALCON's image-server processing and a 1-frame delay (FALCON's `depth_delay`).
+The sim is FAR-FALCON-Terrains' own sim2sim environment, vendored in `rpl_sim2sim`
+(`sim2real/run_sim.py task=loco_manip/loco_manip_cam robot=g1/g1_29dof +obs=loco_manip/g1_29dof_depth
+task.USE_JOYSTICK=true` with `scene_g1_29dof_terrains_freebase_real.xml`): its simulator loop (PD on the latest
+`rt/lowcmd` every 5 ms, elastic band, passive viewer), Unitree `sdk2py` bridge, and depth image server (front +
+back cameras, 240x135, gymnasium renderer, cv2 bicubic resize to 48x27, clip to [0.1, 2] m, normalized to
+[-0.5, 0.5], `depth_delay` 1 frame, 10 Hz, shared memory `depth_img_shm`), with FALCON's MJCF and its resolved
+config (`rpl_sim2sim/config/loco_manip_cam.yaml`). The policy side is the depth student in `holosoma_inference`.
 
 ```bash
 bash rpl_sim2sim/setup_env.sh          # conda envs rplmujoco (sim) + rplinference (policy)
@@ -82,32 +84,17 @@ bash rpl_sim2sim/run_sim.sh            # terminal 1: FALCON course, Xbox pad on 
 bash rpl_sim2sim/run_policy.sh         # terminal 2: shipped student (or --task.model-path X.onnx)
 ```
 
-Once both are up, release the gantry (`9` in the MuJoCo window) and start the policy right away.
-Xbox pad (FALCON's mapping, the default): `start` start, `A+X` init pose, `R2` stand/walk, left
-stick forward speed, right stick yaw, `L2` zero velocity, `B+Y` stop, `B+up/down` base height,
-`Y`/`select` + d-pad waist. For the keyboard instead, add
-`--simulator.config.bridge.use-joystick False` to `run_sim.sh` and
+Once both are up, release the band (`9` in the MuJoCo window) and start the policy right away.
+Xbox pad (FALCON's mapping): `start` start, `A+X` init pose, `R2` stand/walk, left stick forward speed,
+right stick yaw, `L2` zero velocity, `B+Y` stop, `B+up/down` base height, `Y`/`select` + d-pad waist.
+For the keyboard instead, run `run_sim.sh --no-joystick` and add
 `--task.velocity-input keyboard --task.state-input keyboard` to `run_policy.sh`; then `]` start,
-`i` init pose, `=` walk, `w/s/a/d` velocity, `q/e` yaw, `o` stop. FALCON spawns the robot on the stair
-platform; `bash rpl_sim2sim/run_sim.sh --robot.init-state.pos 0 -2 0.8` starts it on the floor
-facing the stairs. Distillation runs export `model_XXXXX.onnx` next to each checkpoint; pass one
-with `--task.model-path`.
-
-FAR-FALCON-Terrains' own sim env is also vendored (`rpl_sim2sim/falcon_sim`: its `BaseSimulator` /
-`LocoManipCamSimulator`, Unitree `sdk2py` bridge, elastic band and depth image server, with FALCON's MJCF and
-resolved config). Run it in place of `run_sim.sh`, with the same `run_policy.sh`:
-
-```bash
-bash rpl_sim2sim/run_falcon_sim.sh                 # FALCON's course, Xbox pad; --no-joystick, --spawn 0 -2 0.8
-CONDA_ROOT=~/.falcon_deps/miniconda3 SIM_ENV=fcreal bash rpl_sim2sim/run_falcon_sim.sh   # in FALCON's env (MuJoCo 3.9)
-```
-
-Headless closed-loop check (walks the stairs, stones and platform, reports the pelvis track):
-
-```bash
-~/.holosoma_deps/miniconda3/envs/rplmujoco/bin/python -m rpl_sim2sim.closed_loop_check \
-    --policy-python ~/.holosoma_deps/miniconda3/envs/rplinference/bin/python [--model-path X.onnx]
-```
+`i` init pose, `=` walk, `w/s/a/d` velocity, `q/e` yaw, `o` stop. MuJoCo window: `7`/`8` band
+length, `3`-`6` move its anchor, `R` toggles video recording (`logs/sim2sim/simulation.mp4`).
+FALCON spawns the robot on the stair platform; `run_sim.sh --spawn 0 -2 0.8` starts it on the floor
+facing the stairs. Distillation runs export `model_XXXXX.onnx` next to each checkpoint; pass one with
+`--task.model-path`. `CONDA_ROOT=~/.falcon_deps/miniconda3 SIM_ENV=fcreal bash rpl_sim2sim/run_sim.sh`
+runs the sim in FALCON's own env (MuJoCo 3.9).
 
 ## Tests
 

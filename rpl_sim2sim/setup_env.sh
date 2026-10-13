@@ -1,6 +1,6 @@
 #!/bin/bash
-# Build the two sim2sim conda envs from thirdparty/holosoma:
-#   SIM_ENV  (default rplmujoco):    MuJoCo + holosoma + rpl  -> python -m rpl_sim2sim.run_sim
+# Build the two sim2sim conda envs:
+#   SIM_ENV  (default rplmujoco):    MuJoCo + FALCON's sim deps + rpl -> python -m rpl_sim2sim.run_sim
 #   POLICY_ENV (default rplinference): holosoma_inference + rpl -> python -m rpl_sim2sim.run_policy
 # Every install goes through the env's own interpreter with the user site disabled, so nothing
 # lands in ~/.local or another Python first on PATH.
@@ -25,9 +25,9 @@ make_env() {
 make_env "$SIM_ENV"
 SIM_PY="$CONDA_ROOT/envs/$SIM_ENV/bin/python"
 "$CONDA_ROOT/bin/conda" install -y -n "$SIM_ENV" ffmpeg --override-channels -c conda-forge
-"$SIM_PY" -m pip install 'mujoco>=3.0.0' mujoco-python-viewer pytest 'gymnasium==1.3.0'  # gymnasium: FALCON's depth renderer
-"$SIM_PY" -m pip install -e "$HOLOSOMA/src/holosoma[unitree,booster]"
-"$SIM_PY" -m pip install 'cyclonedds==0.10.2' loop_rate_limiters imageio-ffmpeg  # rpl_sim2sim.falcon_sim (FALCON's own sim)
+# FALCON's sim2sim: MuJoCo, gymnasium's offscreen renderer (depth), pygame (Xbox pad), unitree_sdk2py over CycloneDDS.
+"$SIM_PY" -m pip install 'mujoco>=3.0.0' 'gymnasium==1.3.0' pygame glfw opencv-python pyyaml loguru numpy \
+    imageio imageio-ffmpeg loop_rate_limiters 'cyclonedds==0.10.2' pytest
 SDK2PY="${SDK2PY_DIR:-$CONDA_ROOT/../unitree_sdk2_python}"  # editable: a wheel install drops its crc .so
 [[ -d "$SDK2PY" ]] || git clone https://github.com/unitreerobotics/unitree_sdk2_python.git "$SDK2PY"
 git -C "$SDK2PY" checkout 432dd06

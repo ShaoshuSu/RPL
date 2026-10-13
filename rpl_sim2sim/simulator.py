@@ -18,9 +18,9 @@ import numpy as np
 from loguru import logger
 from unitree_sdk2py.core.channel import ChannelFactoryInitialize
 
-from rpl_sim2sim.falcon_sim.bridge import ElasticBand, UnitreeSdk2Bridge
-from rpl_sim2sim.falcon_sim.image_server import ImageServer
-from rpl_sim2sim.falcon_sim.rate_limiter import RateLimiter
+from rpl_sim2sim.bridge import ElasticBand, UnitreeSdk2Bridge
+from rpl_sim2sim.image_server import ImageServer
+from rpl_sim2sim.rate_limiter import RateLimiter
 
 
 class FalconLocoManipCamSimulator:
