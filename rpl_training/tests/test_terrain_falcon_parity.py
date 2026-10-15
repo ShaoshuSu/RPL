@@ -197,9 +197,12 @@ def test_falcon_terrain_generates_with_raw_heightfield():
     terrain = Terrain(cfg, num_robots=8)
     hf = terrain.height_field_raw
     assert hf is not None
+    # ``spacing_size=1.0`` (the experts' layout) adds (n - 1) flat gaps per axis.
+    assert cfg.spacing_size == 1.0
+    gap = int(cfg.spacing_size / cfg.horizontal_scale)
     assert hf.shape == (
-        int(2 * cfg.terrain_length / cfg.horizontal_scale) + 2 * int(cfg.border_size / cfg.horizontal_scale),
-        int(4 * cfg.terrain_width / cfg.horizontal_scale) + 2 * int(cfg.border_size / cfg.horizontal_scale),
+        int(2 * cfg.terrain_length / cfg.horizontal_scale) + 2 * int(cfg.border_size / cfg.horizontal_scale) + gap,
+        int(4 * cfg.terrain_width / cfg.horizontal_scale) + 2 * int(cfg.border_size / cfg.horizontal_scale) + 3 * gap,
     )
     assert terrain.vertical_scale == cfg.vertical_scale
     assert list(terrain.terrain_type_names) == list(cfg.terrain_config)

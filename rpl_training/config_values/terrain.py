@@ -83,6 +83,8 @@ terrain_locomotion_multi = TerrainManagerCfg(
 # (same 7/3/5/5 column split of the 20 columns), ``max_slope=0.75``,
 # ``step_width_range=[0.25, 0.30]``, rough-slope noise, and the teacher
 # heightmap sampled from the raw heightfield like FALCON's ``_get_heights``.
+# ``spacing_size=1.0`` (1 m flat gaps between tiles) departs from FALCON's DAgger stage (0.0)
+# to match the terrain the experts are trained on (``_falcon_expert_terrain``).
 terrain_locomotion_multi_falcon = replace(
     terrain_locomotion_multi,
     terrain_term=replace(
@@ -99,6 +101,7 @@ terrain_locomotion_multi_falcon = replace(
         max_slope=0.75,
         step_width_range=[0.25, 0.30],
         slopes_roughness=True,
+        spacing_size=1.0,
         height_scan_mode="falcon",
         body_height_mode="falcon",
     ),
