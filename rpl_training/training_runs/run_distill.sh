@@ -1,6 +1,6 @@
 #!/bin/bash
 # Distill the FALCON MoE terrain teachers into the RPL multi-depth student (DAgger-MA, depth ViT).
-# The four FALCON teacher checkpoints ship in rpl_training/data/models/moe_cnn/falcon_20251105;
+# The four FALCON teacher checkpoints ship in rpl_training/data/models;
 # point --algo.config.ckpt-teacher at a directory with the same per-terrain layout to use your own.
 # Env: SIM=isaacgym|isaacsim (default isaacgym), NGPUS=1, LOGGER=wandb|disabled,
 #      WANDB_PROJECT, WANDB_ENTITY, RUN_NAME. Extra arguments pass through to rpl_training.train_agent.

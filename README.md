@@ -10,21 +10,21 @@
 
 ![](assets/website_hero.gif)
 
-Code for RPL - per-terrain RL experts and multi-depth DAgger distillation, and sim2sim, built on [Holosoma](https://github.com/amazon-far/holosoma).
+Code for RPL - per-terrain experts RL training, multi-depth distillation, and sim2sim, built on [Holosoma](https://github.com/amazon-far/holosoma).
 
-## Release status
+Capabilities:
 
-This release includes RL expert training (stones, stairs, slopes), DAgger distillation of the
-depth student, the four MoE teacher checkpoints, and a MuJoCo sim2sim environment with
-reference student exports.
+- **Bidirectional Multi-Terrain Locomotion** - walks forward and backward across stairs, stepping stones, and slopes.
+- **Whole-Body Loco-Manipulation** - tracks base velocity and end-effector pose, with base height and torso orientation adjustable during stance.
+- **Force-Adaptive Payload Carrying** - compensates for unknown external forces at the end effectors.
 
 ## Repo layout
 
 | Path | What it holds |
 | --- | --- |
-| [`thirdparty/holosoma/`](https://github.com/amazon-far/holosoma) | Holosoma core (git submodule): warp ray-cast depth cameras, PPO-MA, DAgger-MA-MoE, MoE / ViT / CNN modules, terrains |
+| [`thirdparty/holosoma/`](https://github.com/amazon-far/holosoma) | Holosoma core (git submodule): warp ray-cast multi-depth rendering, PPO-MA, DAgger-MA, ViT / CNN modules, terrains |
 | `rpl_training/` | Everything outside Holosoma core: loco-manipulation env, manager terms, presets, launchers, tests |
-| `rpl_training/data/` | ACCAD upper-body motion clips and the four MoE teachers (`models/moe_cnn/falcon_20251105`) |
+| `rpl_training/data/` | ACCAD upper-body motion clips and the four teachers (`models/`) |
 | `rpl_sim2sim/` | Sim2sim: MuJoCo environment (sim side), the depth student for `holosoma_inference` (policy side), reference student exports |
 
 ## Setup
@@ -181,7 +181,7 @@ by default. To distill your
 own experts, pass either:
 
 ```bash
-# A directory with the same per-terrain layout as rpl_training/data/models/moe_cnn/falcon_20251105
+# A directory with the same per-terrain layout as rpl_training/data/models
 --algo.config.ckpt-teacher DIR
 
 # Or one W&B checkpoint per terrain (slopes, stairs_up, stairs_down, stepping_stones_columns)

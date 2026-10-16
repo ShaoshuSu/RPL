@@ -10,13 +10,13 @@ import os
 from dataclasses import replace
 from pathlib import Path
 
-import holosoma
 import pytest
 import torch
 from holosoma.agents.modules.module_utils import setup_student_teacher_actor_module
 from holosoma.agents.modules.modules import BaseModule, build_cnn_layer
 
 from rpl_training.config_values import algo as _algo_presets
+from rpl_training.paths import DATA_DIR
 
 DEFAULTS = vars(_algo_presets)
 
@@ -96,7 +96,7 @@ def test_channel_tokens_vision_mask_zeroes_back_camera():
 
 def _teacher_ckpt() -> str | None:
     roots = [
-        Path(holosoma.__file__).parent / "data/models/moe_cnn/falcon_20251105/stepping_stones_columns",
+        DATA_DIR / "models/stepping_stones_columns",
         Path(os.environ.get("FALCON_TERRAINS_ROOT", Path.home() / "lab42/src/FAR-FALCON-Terrains"))
         / "humanoidverse/data/models/moe_cnn/20251105/stepping_stone",
     ]

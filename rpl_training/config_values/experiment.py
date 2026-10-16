@@ -107,7 +107,7 @@ g1_29dof_falcon_hm_force = replace(
 # Reproduces FAR-FALCON-Terrains' depth distillation
 # (``+exp=falcon_hm_dagger_moe algo=dagger_ma_moe_hm_cnn_depth_vtr``) with FALCON's own MoE
 # teacher checkpoints (``moe_cnn/20251105``, migrated to
-# ``data/models/moe_cnn/falcon_20251105`` under the Holosoma terrain names). Every
+# ``data/models`` under the Holosoma terrain names). Every
 # ``*_falcon`` / ``*_falcon_distill`` preset below mirrors the resolved FALCON config:
 #   * obs: 5-frame state history with ``command_stand`` and absolute base height (the
 #     FALCON teacher's 115-dim frame), depth history pushed every 5 steps, noisy heightmap;
@@ -151,7 +151,7 @@ g1_29dof_rpl_distill = replace(
             num_learning_iterations=20000,
             num_scheduler_iterations=10000,
             num_mini_batches=4,
-            ckpt_teacher=str(DATA_DIR / "models/moe_cnn/falcon_20251105"),
+            ckpt_teacher=str(DATA_DIR / "models"),
         ),
     ),
     simulator=simulator.isaacgym_falcon,
