@@ -1,6 +1,11 @@
 # **[CoRL 2026] RPL: Learning Robust Humanoid Perceptive Locomotion on Challenging Terrains**
 
 <p align="center">
+  Yuanhang Zhang, Younggyo Seo, Juyue Chen, Yifu Yuan, Koushil Sreenath,
+  Pieter Abbeel<sup>†</sup>, Carmelo Sferrazza<sup>†</sup>, Karen Liu<sup>†</sup>, Rocky Duan<sup>†</sup>, Guanya Shi<sup>†</sup>
+</p>
+
+<p align="center">
   <strong>
     <a href="https://rpl-humanoid.github.io/">Project Website</a> |
     <a href="https://arxiv.org/abs/2602.03002">Paper</a> |
