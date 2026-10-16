@@ -22,11 +22,8 @@ from holosoma_inference.config.config_values.task import TASK_REGISTRY, locomoti
 from rpl_sim2sim.policy import RplObservationConfig
 
 MODELS_DIR = Path(__file__).resolve().parent / "models"
-# DEFAULT_MODEL = MODELS_DIR / "rpl_hs_distill_a2iutavy_model_19999.onnx"
-DEFAULT_MODEL = MODELS_DIR / "falcon_terrains_depth_model_19999_delay_2.onnx"
-"""Holosoma-trained student (``rpl-hs-distill/a2iutavy``, FALCON teachers, 2-frame depth delay).
-``falcon_terrains_depth_model_19999_delay_2.onnx`` is FALCON-Terrains' own export of the same
-student, for comparison."""
+# DEFAULT_MODEL = MODELS_DIR / "rpl_original_model_19999.onnx"
+DEFAULT_MODEL = MODELS_DIR / "rpl_holosoma_model_19999.onnx"
 
 # FALCON ``g1_29dof.yaml``: PD gains, stand pose (legs bent, arms at zero), motor order.
 # fmt: off

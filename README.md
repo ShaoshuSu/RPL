@@ -18,8 +18,6 @@ This release includes RL expert training (stones, stairs, slopes), DAgger distil
 depth student, the four MoE teacher checkpoints, and a MuJoCo sim2sim environment with
 reference student exports.
 
-Training targets **IsaacGym** only. IsaacSim is not fully supported for RPL yet.
-
 ## Repo layout
 
 | Path | What it holds |
@@ -46,7 +44,7 @@ https://github.com/user-attachments/assets/e0c3e96a-239f-4308-b16d-7e270d708463
 
 Runs the depth student in the MuJoCo sim2sim environment in
 `rpl_sim2sim/` ([video](assets/rpl_sim2sim.mp4)). The sim and the policy run
-as two processes talking over Unitree `sdk2py` (DDS), with depth images passed through shared memory.
+as two processes communicating over Unitree `sdk2py` (DDS), with depth images passed through shared memory.
 
 ### 1. Install
 
@@ -172,19 +170,13 @@ NGPUS=4 EXPERT=stairs bash rpl_training/training_runs/run_expert.sh --training.n
 NGPUS=4 EXPERT=slopes bash rpl_training/training_runs/run_expert.sh --training.name slopes-expert
 ```
 
-Presets `exp:g1-29dof-rpl-expert-{stones,stairs,slopes}` set each expert's terrain mix,
-reward weights / masks, friction, base COM, IMU and heightmap noise, stair tread width, rough slopes,
-and 1 m tile spacing. They train from scratch with the curricula on and no lower-body control delay.
-
-Their base, `exp:g1-29dof-rpl-expert`, takes the terrain mix on the CLI.
-
 ### 2. Distill the multi-depth student
 
 ```bash
 NGPUS=8 bash rpl_training/training_runs/run_distill.sh --training.name rpl-student
 ```
 
-Preset: `exp:g1-29dof-rpl-distill`, on the experts' 1 m tile spacing. It loads the shipped teachers
+It loads the shipped teachers
 by default. To distill your
 own experts, pass either:
 
