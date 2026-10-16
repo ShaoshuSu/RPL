@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 40 480 330" width="480" height="330" font-family="Helvetica, Arial, sans-serif">
+  <rect x="20" y="40" width="480" height="330" fill="#ffffff"/>
+
+  <!-- Triggers -->
+  <rect x="112" y="58" width="74" height="30" rx="12" fill="#5b5f66"/>
+  <rect x="334" y="58" width="74" height="30" rx="12" fill="#5b5f66"/>
+  <text x="149" y="79" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">L2</text>
+  <text x="371" y="79" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">R2</text>
+
+  <!-- Body -->
+  <path d="M150 96 C 200 84, 320 84, 370 96 C 430 108, 462 160, 474 236 C 486 312, 468 352, 430 352
+           C 398 352, 380 322, 356 294 C 340 276, 322 270, 300 270 L 220 270 C 198 270, 180 276, 164 294
+           C 140 322, 122 352, 90 352 C 52 352, 34 312, 46 236 C 58 160, 90 108, 150 96 Z"
+        fill="#2b2e33"/>
+
+  <!-- Left stick -->
+  <circle cx="150" cy="168" r="30" fill="#1a1c1f"/>
+  <circle cx="150" cy="168" r="21" fill="#4a4e55"/>
+
+  <!-- D-pad -->
+  <rect x="196" y="214" width="16" height="48" rx="3" fill="#4a4e55"/>
+  <rect x="180" y="230" width="48" height="16" rx="3" fill="#4a4e55"/>
+
+  <!-- Right stick -->
+  <circle cx="314" cy="238" r="30" fill="#1a1c1f"/>
+  <circle cx="314" cy="238" r="21" fill="#4a4e55"/>
+
+  <!-- Select / start -->
+  <circle cx="226" cy="168" r="10" fill="#4a4e55"/>
+  <circle cx="294" cy="168" r="10" fill="#4a4e55"/>
+
+  <!-- Face buttons -->
+  <circle cx="380" cy="138" r="15" fill="#e0b322"/>
+  <text x="380" y="144" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">Y</text>
+  <circle cx="350" cy="168" r="15" fill="#2f6fd6"/>
+  <text x="350" y="174" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">X</text>
+  <circle cx="410" cy="168" r="15" fill="#d23c3c"/>
+  <text x="410" y="174" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">B</text>
+  <circle cx="380" cy="198" r="15" fill="#3aa64a"/>
+  <text x="380" y="204" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">A</text>
+
+  <!-- Labels -->
+  <g font-size="12" fill="#e6e6e6" text-anchor="middle">
+    <text x="150" y="172" font-weight="bold">L</text>
+    <text x="314" y="242" font-weight="bold">R</text>
+    <text x="226" y="194">select</text>
+    <text x="294" y="194">start</text>
+  </g>
+  <g font-size="14" fill="#222" text-anchor="middle">
+    <text x="150" y="122" fill="#e6e6e6" font-size="12">left stick</text>
+    <text x="314" y="290" fill="#555" font-size="12">right stick</text>
+    <text x="204" y="290" fill="#555" font-size="12">d-pad</text>
+  </g>
+</svg>

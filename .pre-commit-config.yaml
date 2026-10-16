@@ -1,3 +1,4 @@
+exclude: ^thirdparty/
 repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.11.8
@@ -5,13 +6,21 @@ repos:
   - id: ruff
     args: [ --fix ]
   - id: ruff-format
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.14.1
+  hooks:
+  - id: mypy
+    pass_filenames: true
+    additional_dependencies: [pydantic]
+    exclude: ^thirdparty/
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v4.5.0
   hooks:
   - id: end-of-file-fixer
-    exclude: \.(dae|obj|mtl|stl|xml)$
+    # exclude .dae, .obj, .mtl, .stl files
+    exclude: \.(dae|obj|mtl|stl)$
   - id: trailing-whitespace
-    exclude: \.(dae|obj|mtl|stl|xml)$
+    exclude: \.(dae|obj|mtl|stl)$
   - id: mixed-line-ending
-    args: [--fix=lf]
-    exclude: \.(dae|obj|mtl|stl|xml)$
+    args: [--fix=lf] # Ensures consistent line endings (LF) and removes CR
+    exclude: \.(dae|obj|mtl|stl)$
