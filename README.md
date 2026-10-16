@@ -31,7 +31,7 @@ Training targets **IsaacGym** only. IsaacSim is not fully supported for RPL yet.
 
 ## Setup
 
-Linux with an NVIDIA GPU.
+Linux with NVIDIA GPUs.
 
 ```bash
 git clone --recurse-submodules https://github.com/amazon-far/RPL.git
@@ -42,7 +42,7 @@ The [sim2sim demo](#sim2sim-mujoco) and [training](#training) each install their
 
 ## Sim2sim (MuJoCo)
 
-<video src="https://github.com/amazon-far/RPL/raw/zyuanhan/rpl-release/assets/rpl_sim2sim.mp4" controls muted width="100%"></video>
+https://github.com/user-attachments/assets/e0c3e96a-239f-4308-b16d-7e270d708463
 
 Runs the depth student in the MuJoCo sim2sim environment in
 `rpl_sim2sim/` ([video](assets/rpl_sim2sim.mp4)). The sim and the policy run
@@ -66,6 +66,10 @@ The script needs an existing conda at `CONDA_ROOT`. If you have none, run
 
 ### 2. Launch
 
+> [!TIP]
+> We highly recommend an **Xbox** controller for sim2sim. Plug it into the host running `run_sim.sh`.
+> The keyboard works, but it's harder to steer smoothly.
+
 Start the sim first, then the policy, each in its own terminal:
 
 ```bash
@@ -75,6 +79,13 @@ bash rpl_sim2sim/run_sim.sh
 # Terminal 2: policy (shipped student)
 bash rpl_sim2sim/run_policy.sh
 ```
+
+| Goal | Command |
+| --- | --- |
+| Run your own student | `run_policy.sh --task.model-path /path/model_XXXXX.onnx` |
+| Use the keyboard instead of an Xbox pad | `run_sim.sh --no-joystick` (see [Controls](#controls)) |
+
+`run_sim.sh --help` and `run_policy.sh --help` list the rest.
 
 ### 3. Walk
 
@@ -86,6 +97,10 @@ bash rpl_sim2sim/run_policy.sh
 ### Controls
 
 **Policy, Xbox pad:**
+
+<table>
+<tr>
+<td>
 
 | Input | Action |
 | --- | --- |
@@ -99,7 +114,15 @@ bash rpl_sim2sim/run_policy.sh
 | `B` + d-pad up / down | Base height |
 | `Y` / `select` + d-pad | Waist |
 
-**Policy, keyboard.** Run `run_sim.sh --no-joystick` and
+</td>
+<td><img src="assets/xbox_controls.svg" alt="Xbox controller layout" width="400"></td>
+</tr>
+</table>
+
+<details>
+<summary><b>Policy, keyboard</b> (instead of the Xbox pad)</summary>
+
+Run `run_sim.sh --no-joystick` and
 `run_policy.sh --task.velocity-input keyboard --task.state-input keyboard`:
 
 | Key | Action |
@@ -108,8 +131,10 @@ bash rpl_sim2sim/run_policy.sh
 | `i` | Init pose |
 | `=` | Toggle stand / walk |
 | `w` / `s` / `a` / `d` | Linear velocity |
-| `q` / `e` | Yaw |
+| `q` / `e` | Angular yaw velocity |
 | `o` | Stop |
+
+</details>
 
 **MuJoCo window:**
 
@@ -119,17 +144,6 @@ bash rpl_sim2sim/run_policy.sh
 | `7` / `8` | Band length |
 | `3` - `6` | Move the band anchor |
 | `R` | Toggle video recording (`logs/sim2sim/simulation.mp4`) |
-
-### Options
-
-| Goal | Command |
-| --- | --- |
-| Run your own student | `run_policy.sh --task.model-path /path/model_XXXXX.onnx` |
-| Spawn on the floor facing the stairs (default: the stair platform) | `run_sim.sh --spawn 0 -2 0.8` |
-| Use the keyboard instead of an Xbox pad | `run_sim.sh --no-joystick` (see [Controls](#controls)) |
-
-`run_sim.sh --help` and `run_policy.sh --help` list the rest.
-
 
 ## Training
 
@@ -185,12 +199,6 @@ own experts, pass either:
 Distillation runs export `model_XXXXX.onnx` next to each checkpoint for [sim2sim](#sim2sim-mujoco).
 
 
-## Tests
-
-```bash
-python -m pytest rpl_training/tests   # terms, terrains, modules, warp camera
-python -m pytest rpl_sim2sim/tests    # sim side in rplmujoco, policy side in rplinference
-```
 
 ## Citation
 
@@ -203,9 +211,7 @@ python -m pytest rpl_sim2sim/tests    # sim side in rplmujoco, policy side in rp
 }
 ```
 
-## Related work
-
-- [FALCON](https://lecar-lab.github.io/falcon-humanoid/)
+Related: [FALCON](https://lecar-lab.github.io/falcon-humanoid/)
 
 ## License
 
