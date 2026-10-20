@@ -15,7 +15,7 @@ Code for RPL - per-terrain experts RL training, multi-depth distillation, and si
 Capabilities:
 
 - **Bidirectional Multi-Terrain Locomotion** - walks forward and backward across stairs, stepping stones, and slopes.
-- **Whole-Body Loco-Manipulation** - tracks base velocity and end-effector pose, with base height and torso orientation adjustable during stance.
+- **Whole-Body Teleoperation** - tracks commanded base velocity and end-effector pose, with base height and torso orientation adjustable during stance.
 - **Force-Adaptive Payload Carrying** - compensates for unknown external forces at the end effectors.
 
 ## Repo layout
@@ -111,6 +111,8 @@ bash rpl_sim2sim/run_policy.sh
 | `B` + `Y` | Stop |
 | `B` + d-pad up / down | Base height |
 | `Y` / `select` + d-pad | Waist |
+| `R1` + d-pad | Hands forward / back, apart / together |
+| `X` + d-pad up / down | Hands up / down |
 
 </td>
 <td><img src="assets/xbox_controls.svg" alt="Xbox controller layout" width="400"></td>

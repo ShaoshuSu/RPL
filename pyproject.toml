@@ -53,7 +53,7 @@ include = ["rpl_training*", "rpl_sim2sim*"]
 
 [tool.setuptools.package-data]
 rpl_training = ["training_runs/*.sh", "data/**/*"]
-rpl_sim2sim = ["models/*.onnx", "assets/*.xml", "config/*.yaml"]
+rpl_sim2sim = ["models/*.onnx", "assets/*.xml", "assets/*.urdf", "config/*.yaml"]
 
 [tool.ruff]
 target-version = "py38"
