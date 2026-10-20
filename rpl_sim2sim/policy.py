@@ -11,6 +11,9 @@ Runs the decoupled lower/upper-body student exported by DAgger-MA distillation
   and the ``actions`` term are warm (not zero frames) when the policy is started;
 * per-group push intervals (``RplObservationConfig.obs_intervals``): the depth group takes a new
   frame every 5 policy steps (10 Hz camera at a 50 Hz policy);
+* with the Xbox pad, FALCON's end-effector control: ``R1`` / ``X`` + d-pad move both hands' targets
+  (pelvis frame) and the arm IK (:mod:`rpl_sim2sim.arm_ik`, own 30 Hz thread) turns them into the
+  ``ref_upper_dof_pos`` the student tracks, as FALCON's ``use_upper_body_controller``;
 * depth from the sim's ``depth_img_shm`` block, ``[num_cameras, 1, 27, 48]`` normalized to
   [-0.5, 0.5] (front camera first), with the producer heartbeat checked every step.
 """
@@ -51,6 +54,12 @@ class FalconCommand(Enum):
     FIXED_X_UP = auto()
     FIXED_X_DOWN = auto()
     FIXED_X_TOGGLE = auto()
+    EE_X_UP = auto()
+    EE_X_DOWN = auto()
+    EE_Y_OUT = auto()
+    EE_Y_IN = auto()
+    EE_Z_UP = auto()
+    EE_Z_DOWN = auto()
 
 
 # FAR-FALCON-Terrains' Xbox mapping (``base_policy`` / ``locomotion`` / ``loco_manip_stand_height_waist``
@@ -78,7 +87,27 @@ FALCON_JOYSTICK_COMMANDS: dict[str, StateCommand | FalconCommand] = {
     "A+up": FalconCommand.FIXED_X_UP,
     "A+down": FalconCommand.FIXED_X_DOWN,
     "L1+R1": FalconCommand.FIXED_X_TOGGLE,
+    "R1+up": FalconCommand.EE_X_UP,
+    "R1+down": FalconCommand.EE_X_DOWN,
+    "R1+left": FalconCommand.EE_Y_OUT,
+    "R1+right": FalconCommand.EE_Y_IN,
+    "X+up": FalconCommand.EE_Z_UP,
+    "X+down": FalconCommand.EE_Z_DOWN,
 }
+
+# FALCON ``LocoManipStandHeightWaistPolicy``: initial hand targets (pelvis frame, m) and per-press steps.
+EE_INIT_LEFT = (0.30, 0.13, 0.08)
+EE_INIT_RIGHT = (0.30, -0.13, 0.08)
+EE_STEPS: dict[FalconCommand, tuple[float, float, float]] = {
+    # (dx, dy_left, dz); the right hand mirrors dy.
+    FalconCommand.EE_X_UP: (0.05, 0.0, 0.0),
+    FalconCommand.EE_X_DOWN: (-0.05, 0.0, 0.0),
+    FalconCommand.EE_Y_OUT: (0.0, 0.02, 0.0),
+    FalconCommand.EE_Y_IN: (0.0, -0.02, 0.0),
+    FalconCommand.EE_Z_UP: (0.0, 0.0, 0.05),
+    FalconCommand.EE_Z_DOWN: (0.0, 0.0, -0.05),
+}
+UPPER_BODY_CONTROLLER_HZ = 30.0
 
 
 class RplDepthPolicy(LocomotionPolicy):
@@ -90,6 +119,10 @@ class RplDepthPolicy(LocomotionPolicy):
         upper_indices = [robot.dof_names.index(n) for n in robot.dof_names_upper_body]
         # Upper-body reference pose: the default angles (FALCON's sim2sim has no motion clips).
         self.ref_upper_dof_pos = np.asarray(robot.default_dof_angles, dtype=np.float32)[upper_indices].reshape(1, -1)
+        self.upper_indices = np.asarray(upper_indices)
+        self.arm_ik_thread = None
+        if self._falcon_joystick:
+            self._init_upper_body_controller()
         self._init_depth_sensor()
 
     # --------------------------------------------------------------- joystick
@@ -133,6 +166,9 @@ class RplDepthPolicy(LocomotionPolicy):
             self.fixed_x_speed -= 0.1
         elif cmd is FalconCommand.FIXED_X_TOGGLE:
             self.fixed_x_speed_enabled = not self.fixed_x_speed_enabled
+        elif cmd in EE_STEPS:
+            self._step_ee_targets(*EE_STEPS[cmd])
+            return
         if self.fixed_x_speed_enabled:
             self.lin_vel_command[0, 0] = self.fixed_x_speed
         self.logger.info(
@@ -140,6 +176,28 @@ class RplDepthPolicy(LocomotionPolicy):
             f"{self.waist_dofs_command[0, 2]:+.2f} | fixed x {self.fixed_x_speed:+.2f} "
             f"({'on' if self.fixed_x_speed_enabled else 'off'})"
         )
+
+    # ------------------------------------------------------- end-effector IK
+    def _init_upper_body_controller(self) -> None:
+        from rpl_sim2sim.arm_ik import ArmIK, ArmIKThread
+
+        self.ee_left = np.array(EE_INIT_LEFT, dtype=np.float64)
+        self.ee_right = np.array(EE_INIT_RIGHT, dtype=np.float64)
+        ik = ArmIK(list(self.config.robot.dof_names_upper_body))
+        ik.set_initial_targets(self.ee_left, self.ee_right)
+        self.arm_ik_thread = ArmIKThread(ik, self.ref_upper_dof_pos, UPPER_BODY_CONTROLLER_HZ)
+        self.arm_ik_thread.start()
+
+    def _step_ee_targets(self, dx: float, dy: float, dz: float) -> None:
+        self.ee_left += (dx, dy, dz)
+        self.ee_right += (dx, -dy, dz)
+        self.logger.info(f"EE target left {np.round(self.ee_left, 2)} | right {np.round(self.ee_right, 2)}")
+
+    def _update_upper_body_reference(self, robot_state_data) -> None:
+        """Hand the IK thread the measured arms + targets; adopt its newest solution."""
+        q_upper = robot_state_data[0, 7 + self.upper_indices]
+        self.arm_ik_thread.submit(q_upper, self.ee_left, self.ee_right)
+        self.ref_upper_dof_pos[:] = self.arm_ik_thread.latest()
 
     # ------------------------------------------------------------------ depth
     def _init_depth_sensor(self) -> None:
@@ -208,6 +266,8 @@ class RplDepthPolicy(LocomotionPolicy):
         # Before the base class snapshots use_policy_action, so a stalled producer stops the
         # policy on this tick rather than after one more action on a frozen view.
         self._check_depth_liveness()
+        if self.arm_ik_thread is not None:
+            self._update_upper_body_reference(self.interface.get_low_state())
         if not self.use_policy_action or self.get_ready_state:
             # Not applied: run it anyway to keep the history warm (FALCON's ``rl_inference`` runs
             # every tick). Starting from zero-padded frames makes the first actions a jolt.

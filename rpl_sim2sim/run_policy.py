@@ -8,7 +8,8 @@ Usage::
 
 Xbox pad (FALCON's mapping, read by the sim and relayed as the wireless controller): ``A+X`` init
 pose, ``start`` start, ``R2`` stand/walk, left stick vx, right stick yaw, ``L2`` zero velocity,
-``B+Y`` stop, ``B+up/down`` base height, ``Y`` or ``select`` + d-pad waist pitch/yaw.
+``B+Y`` stop, ``B+up/down`` base height, ``Y`` or ``select`` + d-pad waist pitch/yaw, ``R1`` / ``X`` +
+d-pad hand targets (arm IK).
 Keyboard (policy terminal): ``i`` init pose, ``]`` start, ``=`` stand/walk, ``w/s/a/d`` velocity,
 ``q/e`` yaw, ``z`` zero velocity, ``o`` stop. Any ``holosoma_inference`` argument can be added.
 """
@@ -33,6 +34,9 @@ FALCON Xbox controls (sim2sim: the pad is plugged into the run_sim host):
   select+left / select+right          - waist yaw -/+ 0.1
   Y+left/right, A+left/right, A+Y     - kp level -/+ 0.1, -/+ 0.01, reset
   A+up / A+down, L1+R1                - fixed forward speed +/- 0.1, toggle it
+  R1+up / R1+down                     - hand targets forward/back 0.05 (arm IK)
+  R1+left / R1+right                  - hands apart/together 0.02
+  X+up / X+down                       - hands up/down 0.05
 MuJoCo window: 7/8 raise/lower the gantry, 9 releases it."""
 
 

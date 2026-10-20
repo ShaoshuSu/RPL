@@ -37,7 +37,7 @@ git -C "$SDK2PY" checkout 432dd06
 make_env "$POLICY_ENV"
 POLICY_PY="$CONDA_ROOT/envs/$POLICY_ENV/bin/python"
 "$POLICY_PY" -m pip install -e "$HOLOSOMA/src/holosoma_inference[unitree,booster]" pytest
-"$CONDA_ROOT/bin/conda" install -y -n "$POLICY_ENV" pinocchio --override-channels -c conda-forge
+"$CONDA_ROOT/bin/conda" install -y -n "$POLICY_ENV" pinocchio casadi --override-channels -c conda-forge
 "$POLICY_PY" -m pip install --no-deps -e "$ROOT"
 
 echo "[setup] Done. Terminal 1: bash rpl_sim2sim/run_sim.sh   Terminal 2: bash rpl_sim2sim/run_policy.sh"
