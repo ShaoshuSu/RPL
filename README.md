@@ -17,7 +17,7 @@
 
 > [!NOTE]
 > **Research release only.** For potential issues and future support, please open an issue here or directly contact Yuanhang Zhang (yuanhang0610@gmail.com).
-> Any integration of RPL features into [Holosoma](https://github.com/amazon-far/holosoma) mainline is a separate effort and will not be reflected here.
+> Any integration of RPL features into [Holosoma](https://github.com/amazon-far/holosoma) mainline is a separate effort and will not be reflected here. We use IsaacGym as the training backend since IsaacSim is not fully supported yet (force perturbation not implemented in IsaacSim API).
 
 Code for RPL - per-terrain experts RL training, multi-depth distillation, and sim2sim, built on [Holosoma](https://github.com/amazon-far/holosoma).
 
@@ -174,7 +174,7 @@ The launchers log to W&B by default. Set `LOGGER=disabled` to keep logs local un
 and extra arguments pass through to `rpl_training.train_agent`.
 
 ### 1. Train the RL experts
-
+We recommend training the experts on 4 GPUs.
 ```bash
 NGPUS=4 EXPERT=stones bash rpl_training/training_runs/run_expert.sh --training.name stones-expert
 NGPUS=4 EXPERT=stairs bash rpl_training/training_runs/run_expert.sh --training.name stairs-expert
@@ -182,7 +182,7 @@ NGPUS=4 EXPERT=slopes bash rpl_training/training_runs/run_expert.sh --training.n
 ```
 
 ### 2. Distill the multi-depth student
-
+We recommend training the student on 8 GPUs.
 ```bash
 NGPUS=8 bash rpl_training/training_runs/run_distill.sh --training.name rpl-student
 ```
