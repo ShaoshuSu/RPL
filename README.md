@@ -101,6 +101,54 @@ bash rpl_sim2sim/run_policy.sh
 3. Switch to walking: `R2` (`=`).
 4. Drive with the sticks (`w/s/a/d`, `q/e`).
 
+### Keyboard in one tmux session: reset, band and waypoint following
+
+`run_sim2sim_tmux.sh` starts the sim and the keyboard policy in one tmux session (`rpl_sim2sim`) and adds
+function keys, so everything is driven from the policy terminal without switching to the MuJoCo window:
+
+```bash
+bash rpl_sim2sim/run_sim2sim_tmux.sh                 # drive with the keyboard (w/s, q/e)
+bash rpl_sim2sim/run_sim2sim_tmux.sh --waypoints     # velocity from the waypoint follower (F6)
+bash rpl_sim2sim/run_sim2sim_tmux.sh --spawn 2.5 -2 1.893   # start elsewhere (default 0 -2 0.8)
+tmux kill-session -t rpl_sim2sim                     # stop everything
+```
+
+It runs `run_sim.sh --no-joystick --spawn 0 -2 0.8` by default: on the floor 1.1 m in front of the stairs, facing
+them (+x). The tmux window `policy` takes the keys; the window `sim` shows the sim log (`Ctrl-b n` switches).
+Console logs go to `logs/sim2sim/console_{sim,policy,waypoints}.log`. Run it from a terminal on the desktop
+(the MuJoCo window needs the display); if the session is detached, `tmux attach -t rpl_sim2sim:policy`.
+
+| Key (policy terminal) | Action |
+| --- | --- |
+| `F9` | Release / attach the elastic band (same as `9` in the MuJoCo window) |
+| `F5` | Reset the sim and put the robot back at the spawn point; the band stays as it is |
+| `F6` | Start the waypoint follower (`--waypoints` only); its output opens in a pane below the policy |
+| `F7` | Stop the waypoint follower; the policy gets zero velocity within 0.5 s |
+
+The policy prints a line whenever its command changes, e.g. `CMD vx=+0.20 vy=+0.00 wz=-0.10 | walk | base_h=0.75`.
+
+**Walk with the keyboard:** `F9`, then `]` (start) and `=` (walk), then `w/s` and `q/e`. After a fall: `o`, `F5`,
+`F9` to hang the robot again, and start over.
+
+**Waypoint following** (`--waypoints`): `F9`, `]`, `=`, then `F6`. `w/s/q/e` no longer drive the robot; `]`, `=`,
+`o` still work. The sim sends the base pose over localhost UDP to `rpl_sim2sim/waypoint_follower.py`, which turns
+toward the next waypoint and sends `(vx, 0, wz)` back to the policy (`RPL_VELOCITY_INPUT=udp`). Commands stay
+inside the training command ranges: forward speed 0.3-0.5 m/s (never below the 0.2 m/s training deadband),
+`vy` always 0 (lateral velocity was zeroed in training), `|wz|` <= 0.6 rad/s. A waypoint counts as reached
+within 0.25 m, and an `F5` reset restarts the route.
+
+| Route (`WAYPOINT_ARGS`) | Path on the terrain course |
+| --- | --- |
+| `--route loop` (default) | Stairs up, stepping stones, turn and cross the 0.45 m gap to the far right platform, the 0.25 m gap, ramp down, back to the start; then the same lap reversed, walking backward |
+| `--route loop --return forward` | Same lap, but the robot turns around and walks the reversed lap forward |
+| `--route full` | Each row out and back (stairs + stones, then ramp + gap), switching rows on the ground |
+| `--route left` | Stairs and stepping stones only |
+| `--waypoints X,Y[,DIR] ...` | Your own points; `DIR` -1 walks backward to that point |
+
+Set the options before launching, e.g. `WAYPOINT_ARGS="--return forward" bash rpl_sim2sim/run_sim2sim_tmux.sh
+--waypoints`. Segments across the 0.45 m gap run at 0.8 m/s: at 0.5 m/s the policy stepped in place at the
+edge, at 0.8 m/s it crossed. `--v-max` (0.3-1.0) sets the speed of the other segments.
+
 ### Controls
 
 **Policy, Xbox pad:**
@@ -139,8 +187,10 @@ Run `run_sim.sh --no-joystick` and
 | `]` | Start the policy |
 | `i` | Init pose |
 | `=` | Toggle stand / walk |
-| `w` / `s` / `a` / `d` | Linear velocity |
-| `q` / `e` | Angular yaw velocity |
+| `w` / `s` | Forward / backward velocity, ±0.1 m/s per press (below 0.2 m/s the policy stands: training deadband) |
+| `a` / `d` | Lateral velocity (training zeroed the lateral command on every terrain, so the student never learned to follow it) |
+| `q` / `e` | Turn left / right, ±0.1 rad/s per press |
+| `z` | Zero velocity |
 | `o` | Stop |
 
 </details>
@@ -153,6 +203,9 @@ Run `run_sim.sh --no-joystick` and
 | `7` / `8` | Band length |
 | `3` - `6` | Move the band anchor |
 | `R` | Toggle video recording (`logs/sim2sim/simulation.mp4`) |
+| `Backspace` | Reset the sim (MuJoCo's own reset: back to the model's default pose, band unchanged) |
+| `Esc` | Free camera (the viewer starts following the torso); `Ctrl` + right double-click a body to follow it again |
+| `[` / `]` | Cycle cameras (`]` here switches away from the follow camera; `[` goes back) |
 
 ## Training
 
