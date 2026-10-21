@@ -114,6 +114,7 @@ class RplDepthPolicy(LocomotionPolicy):
     """Decoupled loco-manipulation depth student (RPL / FALCON-Terrains)."""
 
     def __init__(self, config):
+        self._last_logged_command = None
         super().__init__(config)
         robot = self.config.robot
         upper_indices = [robot.dof_names.index(n) for n in robot.dof_names_upper_body]
@@ -134,8 +135,32 @@ class RplDepthPolicy(LocomotionPolicy):
         for provider in {id(p): p for p in (self._velocity_input, self._command_provider)}.values():
             if isinstance(provider, InterfaceInput):
                 provider._mapping = dict(FALCON_JOYSTICK_COMMANDS)
-
     def _apply_velocity(self, vc: VelCmd) -> None:
+        self._apply_velocity_falcon(vc)
+        self._log_command_if_changed()
+
+    def _dispatch_command(self, cmd):
+        self._dispatch_command_falcon(cmd)
+        self._log_command_if_changed()
+
+    def _log_command_if_changed(self) -> None:
+        """Print the command the policy is fed (velocity, stand/walk, base height) whenever it changes."""
+        cmd = (
+            round(float(self.lin_vel_command[0, 0]), 3),
+            round(float(self.lin_vel_command[0, 1]), 3),
+            round(float(self.ang_vel_command[0, 0]), 3),
+            int(self.stand_command[0, 0]),
+            round(float(self.base_height_command[0, 0]), 3),
+        )
+        if cmd == self._last_logged_command:
+            return
+        self._last_logged_command = cmd
+        vx, vy, wz, walk, base_h = cmd
+        self.logger.info(
+            f"CMD vx={vx:+.2f} vy={vy:+.2f} wz={wz:+.2f} | {'walk' if walk else 'stand'} | base_h={base_h:.2f}"
+        )
+
+    def _apply_velocity_falcon(self, vc: VelCmd) -> None:
         if not self._falcon_joystick:
             super()._apply_velocity(vc)
             return
@@ -144,7 +169,7 @@ class RplDepthPolicy(LocomotionPolicy):
         if self.fixed_x_speed_enabled:
             self.lin_vel_command[0, 0] = self.fixed_x_speed
 
-    def _dispatch_command(self, cmd):
+    def _dispatch_command_falcon(self, cmd):
         if not isinstance(cmd, FalconCommand):
             super()._dispatch_command(cmd)
             return
