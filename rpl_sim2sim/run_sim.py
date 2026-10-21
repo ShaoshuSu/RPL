@@ -65,7 +65,10 @@ def main() -> None:
     if args.spawn is not None:
         simulator.mj_data.qpos[:3] = args.spawn
         mujoco.mj_forward(simulator.mj_model, simulator.mj_data)
-        simulator.elastic_band.point = np.array([args.spawn[0], args.spawn[1], simulator.elastic_band.point[2]])
+        # The default anchor z=3.5 is tuned for the default start on the 0.75 m platform (standing base z 0.793):
+        # the 40 kg robot sags ~1.97 m and hangs with its ankles ~4.5 cm above the platform. Keep that offset
+        # from the spawn height; leaving z at 3.5 for a floor spawn (Z=0.8) hangs the ankles 0.77 m up.
+        simulator.elastic_band.point = np.array([args.spawn[0], args.spawn[1], args.spawn[2] + (3.5 - 0.75 - 0.793)])
 
     simulator.sim_thread.start()
     if simulator.record_thread:
