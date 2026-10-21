@@ -130,24 +130,19 @@ The policy prints a line whenever its command changes, e.g. `CMD vx=+0.20 vy=+0.
 **Walk with the keyboard:** `F9`, then `]` (start) and `=` (walk), then `w/s` and `q/e`. After a fall: `o`, `F5`,
 `F9` to hang the robot again, and start over.
 
-**Waypoint following** (`--waypoints`): `F9`, `]`, `=`, then `F6`. `w/s/q/e` no longer drive the robot; `]`, `=`,
-`o` still work. The sim sends the base pose over localhost UDP to `rpl_sim2sim/waypoint_follower.py`, which turns
-toward the next waypoint and sends `(vx, 0, wz)` back to the policy (`RPL_VELOCITY_INPUT=udp`). Commands stay
-inside the training command ranges: forward speed 0.3-0.5 m/s (never below the 0.2 m/s training deadband),
-`vy` always 0 (lateral velocity was zeroed in training), `|wz|` <= 0.6 rad/s. A waypoint counts as reached
-within 0.25 m, and an `F5` reset restarts the route.
+**Waypoint following** (`--waypoints`): `F9`, `]`, `=`, then `F6`. `rpl_sim2sim/waypoint_follower.py` reads the
+robot pose from the sim and replaces `w/s/q/e`; `F5` restarts the route. Pick a route with `WAYPOINT_ARGS`, e.g.
+`WAYPOINT_ARGS="--route full" bash rpl_sim2sim/run_sim2sim_tmux.sh --waypoints`:
 
-| Route (`WAYPOINT_ARGS`) | Path on the terrain course |
+| `WAYPOINT_ARGS` | Route |
 | --- | --- |
-| `--route loop` (default) | Stairs up, stepping stones, turn and cross the 0.45 m gap to the far right platform, the 0.25 m gap, ramp down, back to the start; then the same lap reversed, walking backward |
-| `--route loop --return forward` | Same lap, but the robot turns around and walks the reversed lap forward |
-| `--route full` | Each row out and back (stairs + stones, then ramp + gap), switching rows on the ground |
+| (default) | One lap (stairs, stepping stones, 0.45 m gap, 0.25 m gap, ramp down), then back walking backward |
+| `--return forward` | Same lap, back walking forward |
+| `--route full` | Each row out and back |
 | `--route left` | Stairs and stepping stones only |
-| `--waypoints X,Y[,DIR] ...` | Your own points; `DIR` -1 walks backward to that point |
+| `--waypoints X,Y[,DIR] ...` | Your own points (`DIR` -1: walk backward) |
 
-Set the options before launching, e.g. `WAYPOINT_ARGS="--return forward" bash rpl_sim2sim/run_sim2sim_tmux.sh
---waypoints`. Segments across the 0.45 m gap run at 0.8 m/s: at 0.5 m/s the policy stepped in place at the
-edge, at 0.8 m/s it crossed. `--v-max` (0.3-1.0) sets the speed of the other segments.
+Speeds stay inside the training command ranges: 0.3-0.5 m/s, 0.8 m/s across the 0.45 m gap.
 
 ### Controls
 
