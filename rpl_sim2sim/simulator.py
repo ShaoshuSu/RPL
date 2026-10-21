@@ -81,6 +81,13 @@ class FalconLocoManipCamSimulator:
         # LocoManipCamSimulator / LocoManipSimulator viewer options
         self.viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_TRANSPARENT] = True
         self.viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_PERTFORCE] = True
+        # Follow the torso in the viewer, with the same view as record_video(); Esc returns to the free camera.
+        with self.viewer.lock():
+            self.viewer.cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
+            self.viewer.cam.trackbodyid = self.mj_model.body("torso_link").id
+            self.viewer.cam.distance = 3.0
+            self.viewer.cam.azimuth = 90.0
+            self.viewer.cam.elevation = -20.0
 
     def init_factory(self):
         if self.config.get("INTERFACE", None):
