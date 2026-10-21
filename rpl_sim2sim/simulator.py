@@ -9,9 +9,11 @@ torso, the passive viewer synced every ``VIEWER_DT``, the follow-camera video th
 from __future__ import annotations
 
 import os
+import signal
 import time
 from threading import Thread
 
+import glfw
 import mujoco
 import mujoco.viewer
 import numpy as np
@@ -31,6 +33,13 @@ class FalconLocoManipCamSimulator:
         self.init_scene()
         self.init_factory()
         self.init_robot_bridge()
+        # SIGUSR1 resets the sim like the viewer's Backspace and puts the base back at `spawn`, leaving the elastic
+        # band as it was; SIGUSR2 toggles the band like key 9. Both let tmux key bindings in the policy terminal
+        # drive the sim without switching to the MuJoCo window.
+        self.spawn = None  # set by run_sim.py --spawn; None keeps the model's default base position
+        self._reset_requested = False
+        signal.signal(signal.SIGUSR1, lambda signum, frame: setattr(self, "_reset_requested", True))
+        signal.signal(signal.SIGUSR2, lambda signum, frame: self.elastic_band.MujuocoKeyCallback(glfw.KEY_9))
 
         self.sim_thread = Thread(target=self.simulation_thread)
         self.record_thread = None
@@ -136,6 +145,16 @@ class FalconLocoManipCamSimulator:
         sim_cnt = 0
         start_time = time.time()
         while self.viewer.is_running():
+            if self._reset_requested:
+                self._reset_requested = False
+                with self.viewer.lock():
+                    mujoco.mj_resetData(self.mj_model, self.mj_data)
+                    if self.spawn is not None:
+                        self.mj_data.qpos[:3] = self.spawn
+                    mujoco.mj_forward(self.mj_model, self.mj_data)
+                self.logger.info(
+                    f"Reset by SIGUSR1: sim state reset to spawn={self.spawn}, elastic band enable={self.elastic_band.enable}."
+                )
             self.sim_step()
             if sim_cnt % (self.viewer_dt / self.sim_dt) == 0:
                 self.viewer.sync()

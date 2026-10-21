@@ -63,6 +63,7 @@ def main() -> None:
 
     simulator = FalconLocoManipCamSimulator(config, video_path=args.video)
     if args.spawn is not None:
+        simulator.spawn = args.spawn  # SIGUSR1 reset returns here
         simulator.mj_data.qpos[:3] = args.spawn
         mujoco.mj_forward(simulator.mj_model, simulator.mj_data)
         # The default anchor z=3.5 is tuned for the default start on the 0.75 m platform (standing base z 0.793):
