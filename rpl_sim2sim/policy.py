@@ -20,6 +20,7 @@ Runs the decoupled lower/upper-body student exported by DAgger-MA distillation
 
 from __future__ import annotations
 
+import os
 from collections import deque
 from enum import Enum, auto
 
@@ -135,6 +136,15 @@ class RplDepthPolicy(LocomotionPolicy):
         for provider in {id(p): p for p in (self._velocity_input, self._command_provider)}.values():
             if isinstance(provider, InterfaceInput):
                 provider._mapping = dict(FALCON_JOYSTICK_COMMANDS)
+        # RPL_VELOCITY_INPUT=udp: velocity comes from waypoint_follower.py; state keys (start, stand/walk, stop)
+        # stay on the configured state input.
+        if os.environ.get("RPL_VELOCITY_INPUT") == "udp":
+            from rpl_sim2sim.udp_velocity_input import UdpVelocityInput
+
+            self._velocity_input = UdpVelocityInput()
+            self._velocity_input.start()
+            self._falcon_joystick = False
+
     def _apply_velocity(self, vc: VelCmd) -> None:
         self._apply_velocity_falcon(vc)
         self._log_command_if_changed()

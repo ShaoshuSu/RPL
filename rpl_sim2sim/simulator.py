@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import os
 import signal
+import socket
+import struct
 import time
 from threading import Thread
 
@@ -23,6 +25,8 @@ from unitree_sdk2py.core.channel import ChannelFactoryInitialize
 from rpl_sim2sim.bridge import ElasticBand, UnitreeSdk2Bridge
 from rpl_sim2sim.image_server import ImageServer
 from rpl_sim2sim.rate_limiter import RateLimiter
+from rpl_sim2sim.waypoint_udp import HOST as UDP_HOST
+from rpl_sim2sim.waypoint_udp import POSE_FORMAT, POSE_PORT, yaw_from_wxyz
 
 
 class FalconLocoManipCamSimulator:
@@ -37,6 +41,8 @@ class FalconLocoManipCamSimulator:
         # band as it was; SIGUSR2 toggles the band like key 9. Both let tmux key bindings in the policy terminal
         # drive the sim without switching to the MuJoCo window.
         self.spawn = None  # set by run_sim.py --spawn; None keeps the model's default base position
+        # Base pose for waypoint_follower.py, sent at the viewer rate (see waypoint_udp.py).
+        self._pose_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._reset_requested = False
         signal.signal(signal.SIGUSR1, lambda signum, frame: setattr(self, "_reset_requested", True))
         signal.signal(signal.SIGUSR2, lambda signum, frame: self.elastic_band.MujuocoKeyCallback(glfw.KEY_9))
@@ -158,6 +164,9 @@ class FalconLocoManipCamSimulator:
             self.sim_step()
             if sim_cnt % (self.viewer_dt / self.sim_dt) == 0:
                 self.viewer.sync()
+                q = self.mj_data.qpos
+                pose = (self.mj_data.time, q[0], q[1], q[2], yaw_from_wxyz(q[3], q[4], q[5], q[6]))
+                self._pose_sock.sendto(struct.pack(POSE_FORMAT, *pose), (UDP_HOST, POSE_PORT))
             sim_cnt += 1
             if sim_cnt % 1000 == 0:
                 end_time = time.time()
