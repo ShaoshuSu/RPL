@@ -14,7 +14,7 @@ A sim reset (F5: sim time jumps back) restarts the route from the first waypoint
     python -m rpl_sim2sim.waypoint_follower                       # one lap, then the lap reversed walking backward
     python -m rpl_sim2sim.waypoint_follower --return forward      # ... reversed lap walking forward instead
     python -m rpl_sim2sim.waypoint_follower --route full          # each row out and back, rows switched on the ground
-    python -m rpl_sim2sim.waypoint_follower --waypoints 2.55,-2.02 0.3,-2.0,-1
+    python -m rpl_sim2sim.waypoint_follower --waypoints="2.55,-2.02 0.3,-2.0,-1"   # one string, with "="
 """
 
 from __future__ import annotations
@@ -119,7 +119,10 @@ def main() -> None:
     ap.add_argument("--route", choices=["loop", "full", "left"], default="loop")
     ap.add_argument("--return", dest="return_mode", choices=["backward", "forward"], default="backward",
                     help="how route 'loop' walks the reversed lap")
-    ap.add_argument("--waypoints", nargs="+", type=parse_waypoint, default=None, metavar="X,Y[,DIR]",
+    # One string, points separated by spaces: a separate argument starting with "-" (negative x) would be
+    # read by argparse as an option.
+    ap.add_argument("--waypoints", type=lambda text: [parse_waypoint(w) for w in text.split()], default=None,
+                    metavar="'X,Y[,DIR] ...'",
                     help="overrides --route")
     ap.add_argument("--v-max", type=float, default=V_MAX, help="m/s, at most 1.0 (training range)")
     args = ap.parse_args()
