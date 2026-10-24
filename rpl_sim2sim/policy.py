@@ -114,6 +114,9 @@ UPPER_BODY_CONTROLLER_HZ = 30.0
 class RplDepthPolicy(LocomotionPolicy):
     """Decoupled loco-manipulation depth student (RPL / FALCON-Terrains)."""
 
+    # actor_obs_lower_body = these observation groups, concatenated in this order
+    LOWER_BODY_GROUPS = ("actor_obs", "perception_obs", "command_lin_vel_obs")
+
     def __init__(self, config):
         self._last_logged_command = None
         super().__init__(config)
@@ -267,8 +270,11 @@ class RplDepthPolicy(LocomotionPolicy):
         obs["command_base_height"] = self.base_height_command
         obs["command_waist_dofs"] = self.waist_dofs_command
         obs["ref_upper_dof_pos"] = self.ref_upper_dof_pos
-        obs["cam_depth"] = self.depth_sensor.get_latest().reshape(1, -1)
+        obs.update(self._perception_obs())
         return obs
+
+    def _perception_obs(self) -> dict[str, np.ndarray]:
+        return {"cam_depth": self.depth_sensor.get_latest().reshape(1, -1)}
 
     def _update_obs_history(self, current_obs_dict):
         """Time-major group history with push intervals; zero frames before the first push."""
@@ -291,7 +297,7 @@ class RplDepthPolicy(LocomotionPolicy):
 
     def prepare_obs_for_rl(self, robot_state_data):
         groups = self._prepare_group_observations(robot_state_data)
-        lower = np.concatenate([groups["actor_obs"], groups["perception_obs"], groups["command_lin_vel_obs"]], axis=1)
+        lower = np.concatenate([groups[g] for g in self.LOWER_BODY_GROUPS], axis=1)
         return {
             "actor_obs_lower_body": lower.astype(np.float32, copy=False),
             "actor_obs_upper_body": groups["actor_obs"].astype(np.float32, copy=False),

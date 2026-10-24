@@ -18,6 +18,7 @@ from holosoma_inference.config.config_values.inference import INFERENCE_REGISTRY
 from holosoma_inference.config.config_values.observation import OBSERVATION_REGISTRY
 from holosoma_inference.config.config_values.robot import ROBOT_REGISTRY, g1_29dof
 from holosoma_inference.config.config_values.task import TASK_REGISTRY, locomotion
+from holosoma_inference.policies.dual_mode import _BUILTIN_POLICY_TYPES
 
 from rpl_sim2sim.policy import RplObservationConfig
 
@@ -140,6 +141,24 @@ g1_29dof_rpl_depth = InferenceConfig(
 )
 
 
+# Terrain teachers (tools/export_teacher_onnx.py): same actor_obs, the 16 x 10 height map from
+# run_sim.py --height-scan as perception_obs (history 1, every step, as in the teachers' training config).
+DEFAULT_TEACHER_MODEL = MODELS_DIR / "rpl_teacher_stairs_up_model_74998.onnx"
+rpl_teacher_observation = RplObservationConfig(
+    obs_dict={"actor_obs": rpl_depth_observation.obs_dict["actor_obs"], "perception_obs": ["height_scan"]},
+    obs_dims={**{k: v for k, v in rpl_depth_observation.obs_dims.items() if k != "cam_depth"}, "height_scan": 160},
+    obs_scales={**{k: v for k, v in rpl_depth_observation.obs_scales.items() if k != "cam_depth"}, "height_scan": 1.0},
+    history_length_dict={"actor_obs": 5, "perception_obs": 1},
+    obs_intervals={"actor_obs": 1, "perception_obs": 1},
+)
+rpl_teacher_task = replace(rpl_depth_task, model_path=str(DEFAULT_TEACHER_MODEL), policy_type="rpl_heightmap_teacher")
+g1_29dof_rpl_teacher = InferenceConfig(
+    robot=g1_29dof_rpl,
+    observation=rpl_teacher_observation,
+    task=rpl_teacher_task,
+)
+
+
 def register() -> None:
     """Add the presets to ``holosoma_inference``'s registries (idempotent)."""
     ROBOT_REGISTRY.add("g1-29dof-rpl", g1_29dof_rpl)
@@ -147,8 +166,23 @@ def register() -> None:
     TASK_REGISTRY.add("rpl-depth", rpl_depth_task)
     CAMERA_REGISTRY.add("rpl-dual-depth", rpl_dual_depth)
     INFERENCE_REGISTRY.add("g1-29dof-rpl-depth", g1_29dof_rpl_depth)
+    OBSERVATION_REGISTRY.add("rpl-teacher", rpl_teacher_observation)
+    TASK_REGISTRY.add("rpl-teacher", rpl_teacher_task)
+    INFERENCE_REGISTRY.add("g1-29dof-rpl-teacher", g1_29dof_rpl_teacher)
+    # Also resolvable without reinstalling (pyproject entry point): holosoma's built-in fallback table.
+    _BUILTIN_POLICY_TYPES["rpl_heightmap_teacher"] = ("rpl_sim2sim.teacher_policy", "RplHeightmapTeacherPolicy")
 
 
 register()
 
-__all__ = ["DEFAULT_MODEL", "g1_29dof_rpl", "g1_29dof_rpl_depth", "rpl_depth_observation", "rpl_depth_task"]
+__all__ = [
+    "DEFAULT_MODEL",
+    "DEFAULT_TEACHER_MODEL",
+    "g1_29dof_rpl",
+    "g1_29dof_rpl_depth",
+    "g1_29dof_rpl_teacher",
+    "rpl_depth_observation",
+    "rpl_depth_task",
+    "rpl_teacher_observation",
+    "rpl_teacher_task",
+]
