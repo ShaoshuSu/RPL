@@ -101,48 +101,34 @@ bash rpl_sim2sim/run_policy.sh
 3. Switch to walking: `R2` (`=`).
 4. Drive with the sticks (`w/s/a/d`, `q/e`).
 
-### Keyboard in one tmux session: reset, band and waypoint following
+### 4. One-terminal launcher (tmux) with waypoint tracking
 
-`run_sim2sim_tmux.sh` starts the sim and the keyboard policy in one tmux session (`rpl_sim2sim`) and adds
-function keys, so everything is driven from the policy terminal without switching to the MuJoCo window:
+`run_sim2sim_tmux.sh` starts the sim and the keyboard policy in one tmux session, with the band, reset and
+waypoint follower on keys in the policy terminal. Run it from a desktop terminal.
 
 ```bash
-bash rpl_sim2sim/run_sim2sim_tmux.sh                 # drive with the keyboard (w/s, q/e)
-bash rpl_sim2sim/run_sim2sim_tmux.sh --waypoints     # velocity from the waypoint follower (F6)
-bash rpl_sim2sim/run_sim2sim_tmux.sh --spawn 2.5 -2 1.893   # start elsewhere (default 0 -2 0.8)
-tmux kill-session -t rpl_sim2sim                     # stop everything
+bash rpl_sim2sim/run_sim2sim_tmux.sh               # drive with the keyboard
+bash rpl_sim2sim/run_sim2sim_tmux.sh --waypoints   # drive with the waypoint follower
+tmux kill-session -t rpl_sim2sim                   # stop
 ```
 
-It runs `run_sim.sh --no-joystick --spawn 0 -2 0.8` by default: on the floor 1.1 m in front of the stairs, facing
-them (+x). The tmux window `policy` takes the keys; the window `sim` shows the sim log (`Ctrl-b n` switches).
-Console logs go to `logs/sim2sim/console_{sim,policy,waypoints}.log`. Run it from a terminal on the desktop
-(the MuJoCo window needs the display); if the session is detached, `tmux attach -t rpl_sim2sim:policy`.
-
-| Key (policy terminal) | Action |
-| --- | --- |
-| `F9` | Release / attach the elastic band (same as `9` in the MuJoCo window) |
-| `F5` | Reset the sim and put the robot back at the spawn point; the band stays as it is |
-| `F6` | Start the waypoint follower (`--waypoints` only); its output opens in a pane below the policy |
-| `F7` | Stop the waypoint follower; the policy gets zero velocity within 0.5 s |
-
-The policy prints a line whenever its command changes, e.g. `CMD vx=+0.20 vy=+0.00 wz=-0.10 | walk | base_h=0.75`.
-
-**Walk with the keyboard:** `F9`, then `]` (start) and `=` (walk), then `w/s` and `q/e`. After a fall: `o`, `F5`,
-`F9` to hang the robot again, and start over.
-
-**Waypoint following** (`--waypoints`): `F9`, `]`, `=`, then `F6`. `rpl_sim2sim/waypoint_follower.py` reads the
-robot pose from the sim and replaces `w/s/q/e`; `F5` restarts the route. Pick a route with `WAYPOINT_ARGS`, e.g.
-`WAYPOINT_ARGS="--route full" bash rpl_sim2sim/run_sim2sim_tmux.sh --waypoints`:
+1. Release the band: `F9`.
+2. Start the policy and walk: `]`, then `=`.
+3. Drive with `w/s` and `q/e`. With `--waypoints`, `F6` starts the follower and `F7` stops it.
+4. After a fall: `F5` to reset.
+<!-- 
+Pick a route with `WAYPOINT_ARGS`, e.g. `WAYPOINT_ARGS="--route full"`:
 
 | `WAYPOINT_ARGS` | Route |
 | --- | --- |
-| (default) | One lap (stairs, stepping stones, 0.45 m gap, 0.25 m gap, ramp down), then back walking backward |
-| `--return forward` | Same lap, back walking forward |
+| (default) | Stairs, stepping stones, 0.45 m gap, 0.25 m gap, ramp down, then back walking backward |
+| `--return forward` | Same, back walking forward |
 | `--route full` | Each row out and back |
 | `--route left` | Stairs and stepping stones only |
-| `--waypoints X,Y[,DIR] ...` | Your own points (`DIR` -1: walk backward) |
+| `--waypoints="X,Y[,DIR] ..."` | Your own points (`DIR` -1: walk backward) |
 
-Speeds stay inside the training command ranges: 0.3-0.5 m/s, 0.8 m/s across the 0.45 m gap.
+`--spawn X Y Z` moves the start (default `0 -2 0.8`, 1.1 m before the stairs). Logs go to
+`logs/sim2sim/console_{sim,policy,waypoints}.log`. -->
 
 ### Controls
 
