@@ -25,6 +25,8 @@ EXPERIMENTS = {
     "g1_29dof_rpl_expert_slopes": experiment.g1_29dof_rpl_expert_slopes,
     # Multi-depth DAgger student (FALCON ``+exp=falcon_hm_dagger_moe algo=dagger_ma_moe_hm_cnn_depth_vtr``).
     "g1_29dof_rpl_distill": experiment.g1_29dof_rpl_distill,
+    # Height-map student: same teachers, LiDAR-style height map instead of the depth cameras.
+    "g1_29dof_rpl_heightmap_distill": experiment.g1_29dof_rpl_heightmap_distill,
 }
 
 

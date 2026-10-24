@@ -10,6 +10,7 @@ from dataclasses import replace
 from holosoma.config_types.experiment import ExperimentConfig, NightlyConfig, TrainingConfig
 from holosoma.config_types.motion import MotionLibConfig
 from holosoma.config_values import action
+from holosoma.config_values.camera import none as camera_none
 from holosoma.config_values.terrain import terrain_locomotion_plane
 
 from rpl_training.config_values import algo, robot, simulator, terrain
@@ -31,6 +32,9 @@ from rpl_training.config_values.observation import (
     g1_29dof_rpl_history_wolinvel,
     g1_29dof_rpl_history_wolinvel_hm_noise,
 )
+from rpl_training.config_values.observation import (
+    g1_29dof_rpl_heightmap_distill as g1_29dof_rpl_heightmap_distill_obs,
+)
 from rpl_training.config_values.randomization import (
     g1_29dof_falcon_hm_randomization,
     g1_29dof_rpl_randomization_distill,
@@ -38,6 +42,7 @@ from rpl_training.config_values.randomization import (
     g1_29dof_rpl_randomization_expert_slopes,
     g1_29dof_rpl_randomization_expert_stairs,
     g1_29dof_rpl_randomization_expert_stones,
+    g1_29dof_rpl_randomization_heightmap_distill,
 )
 from rpl_training.config_values.reward import (
     g1_29dof_falcon_hm_reward,
@@ -163,6 +168,30 @@ g1_29dof_rpl_distill = replace(
     curriculum=g1_29dof_rpl_curriculum_distill,
 )
 
+
+# Height-map student: g1_29dof_rpl_distill with the student reading a LiDAR-style height map instead of the
+# two depth cameras (no camera manager), distilled from the same four terrain teachers.
+g1_29dof_rpl_heightmap_distill = replace(
+    g1_29dof_rpl_distill,
+    training=replace(
+        g1_29dof_rpl_distill.training,
+        project="rpl-g1-heightmap-distill",
+        name="g1_29dof_rpl_heightmap_distill",
+    ),
+    algo=replace(
+        algo.dagger_ma_moe_cnn_heightmap_falcon,
+        config=replace(
+            algo.dagger_ma_moe_cnn_heightmap_falcon.config,
+            num_learning_iterations=g1_29dof_rpl_distill.algo.config.num_learning_iterations,
+            num_scheduler_iterations=g1_29dof_rpl_distill.algo.config.num_scheduler_iterations,
+            num_mini_batches=g1_29dof_rpl_distill.algo.config.num_mini_batches,
+            ckpt_teacher=g1_29dof_rpl_distill.algo.config.ckpt_teacher,
+        ),
+    ),
+    camera=camera_none,
+    observation=g1_29dof_rpl_heightmap_distill_obs,
+    randomization=g1_29dof_rpl_randomization_heightmap_distill,
+)
 
 # Reproduces FAR-FALCON-Terrains' RL experts (``+exp=falcon_hm_multi_terrain
 # algo=ppo_ma_hm_cnn``) with FALCON's task: stand flag sampled per terrain with the

@@ -376,3 +376,26 @@ dagger_ma_moe_cnn_depth_vtr_falcon = replace(
         ),
     ),
 )
+
+
+# Height-map student: dagger_ma_moe_cnn_depth_vtr_falcon (same MoE teachers, optimizer, schedule) with the lower
+# body's depth ViT replaced by the teachers' own CNN encoder over the 16 x 10 height map in perception_obs.
+dagger_ma_moe_cnn_heightmap_falcon = replace(
+    dagger_ma_moe_cnn_depth_vtr_falcon,
+    config=replace(
+        dagger_ma_moe_cnn_depth_vtr_falcon.config,
+        module_dict=replace(
+            dagger_ma_moe_cnn_depth_vtr_falcon.config.module_dict,
+            actor_lower_body=ModuleConfig(
+                type="CNNEncoder",
+                input_dim=["actor_state_obs", "perception_obs"],
+                output_dim=["robot_action_dim"],
+                layer_config=replace(
+                    _HM_CNN_LAYER_TEACHER,
+                    encoder_input_name="perception_obs",
+                    module_input_name=("actor_state_obs",),
+                ),
+            ),
+        ),
+    ),
+)

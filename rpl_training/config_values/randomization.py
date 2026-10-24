@@ -153,6 +153,31 @@ g1_29dof_rpl_randomization_distill = replace(
     },
 )
 
+# Height-map student: the distill randomization plus the LiDAR elevation-map errors of its height map
+# (rpl_training.terms.lidar_height_map). Policy steps are 20 ms: delay 0-5 steps = 0-100 ms, republish every 5 = 10 Hz.
+_LIDAR_HEIGHT_MAP_NOISE = "rpl_training.terms.lidar_height_map:LidarHeightMapNoise"
+g1_29dof_rpl_randomization_heightmap_distill = replace(
+    g1_29dof_rpl_randomization_distill,
+    setup_terms={
+        **g1_29dof_rpl_randomization_distill.setup_terms,
+        "lidar_height_map_noise": RandomizationTermCfg(
+            func=_LIDAR_HEIGHT_MAP_NOISE,
+            params={
+                "xy_offset_range": [-0.05, 0.05],
+                "z_offset_range": [-0.03, 0.03],
+                "point_noise_std": 0.015,
+                "delay_steps_range": [0, 5],
+                "update_period_steps": 5,
+                "hole_prob_range": [0.0, 0.1],
+            },
+        ),
+    },
+    reset_terms={
+        **g1_29dof_rpl_randomization_distill.reset_terms,
+        "lidar_height_map_noise": RandomizationTermCfg(func=_LIDAR_HEIGHT_MAP_NOISE),
+    },
+)
+
 # FAR-FALCON-Terrains ``domain_rand_unitree_rl_gym_g1_falcon_hm`` as resolved by
 # ``+exp=falcon_hm_multi_terrain`` (RL experts). Same as the distill preset except
 # friction U[0.25, 1.25], base COM off by default (the slopes / stones experts enable it
@@ -200,6 +225,7 @@ g1_29dof_rpl_randomization_expert_stairs = _falcon_expert_randomization([-0.6, 1
 g1_29dof_rpl_randomization_expert_slopes = _falcon_expert_randomization([-0.1, 1.0])
 
 __all__ = [
+    "g1_29dof_rpl_randomization_heightmap_distill",
     "g1_29dof_falcon_hm_randomization",
     "g1_29dof_rpl_randomization_expert",
     "g1_29dof_rpl_randomization_distill",

@@ -312,6 +312,31 @@ g1_29dof_rpl_depth_distill = replace(
 )
 
 
+# Height-map student: g1_29dof_rpl_depth_distill with the depth stack replaced by the teachers' 16 x 10 height map
+# carrying LiDAR elevation-map errors (rpl_training.terms.lidar_height_map; parameters in the randomization term
+# "lidar_height_map_noise"). One frame, every policy step: the map's lower update rate and latency are modelled
+# inside the term. Teacher, critic and state groups are unchanged.
+g1_29dof_rpl_heightmap_distill = replace(
+    g1_29dof_rpl_depth_distill,
+    groups={
+        **g1_29dof_rpl_depth_distill.groups,
+        "perception_obs": _group(
+            concatenate=True,
+            enable_noise=False,
+            history_length=1,
+            reset_history_on_env_reset=False,
+            terms={
+                "lidar_height_map": ObsTermCfg(
+                    func="rpl_training.terms.lidar_height_map:lidar_height_measurements",
+                    scale=1.0,
+                    noise=0.0,
+                    params={"noise_term": "lidar_height_map_noise", "min_height": -0.5, "max_height": 0.5},
+                ),
+            },
+        ),
+    },
+)
+
 # FALCON's RL experts (final fine-tune stages of falcon-29-terrains-experts{,-stones}) add
 # IMU noise ``obs.noise_scales.base_ang_vel=0.2 projected_gravity=0.05`` on the CLI; the
 # critic sees it at noise_level 0.1.
@@ -369,6 +394,7 @@ g1_29dof_rpl_history_wolinvel_hm_noise = replace(
 
 
 __all__ = [
+    "g1_29dof_rpl_heightmap_distill",
     "g1_29dof_falcon_hm_depth_distill",
     "g1_29dof_rpl_depth_distill",
     "g1_29dof_falcon_hm_history_wolinvel",

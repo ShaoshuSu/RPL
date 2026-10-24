@@ -22,6 +22,7 @@ g1_29dof_rpl_expert_stones = "rpl_training.config_values.experiment:g1_29dof_rpl
 g1_29dof_rpl_expert_stairs = "rpl_training.config_values.experiment:g1_29dof_rpl_expert_stairs"
 g1_29dof_rpl_expert_slopes = "rpl_training.config_values.experiment:g1_29dof_rpl_expert_slopes"
 g1_29dof_rpl_distill = "rpl_training.config_values.experiment:g1_29dof_rpl_distill"
+g1_29dof_rpl_heightmap_distill = "rpl_training.config_values.experiment:g1_29dof_rpl_heightmap_distill"
 
 [project.entry-points."holosoma.config.camera_manager"]
 warp_dual_depth_cameras_falcon = "rpl_training.config_values.camera:warp_dual_depth_cameras_falcon"
