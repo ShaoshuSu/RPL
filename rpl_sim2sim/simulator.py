@@ -22,6 +22,7 @@ import numpy as np
 from loguru import logger
 from unitree_sdk2py.core.channel import ChannelFactoryInitialize
 
+from rpl_sim2sim import height_scan
 from rpl_sim2sim.bridge import ElasticBand, UnitreeSdk2Bridge
 from rpl_sim2sim.image_server import ImageServer
 from rpl_sim2sim.rate_limiter import RateLimiter
@@ -43,6 +44,11 @@ class FalconLocoManipCamSimulator:
         self.spawn = None  # set by run_sim.py --spawn; None keeps the model's default base position
         # Base pose for waypoint_follower.py, sent at the viewer rate (see waypoint_udp.py).
         self._pose_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # Height map for the terrain teachers (height_scan.py), sent at the viewer rate when run_sim.py --height-scan.
+        self.height_scan_enabled = False
+        self._terrain_geomgroup = np.zeros(6, dtype=np.uint8)
+        self._terrain_geomgroup[2] = 1  # terrain geoms are group 2, robot geoms 0/1
+        self._ray_geomid = np.zeros(1, dtype=np.int32)
         self._reset_requested = False
         signal.signal(signal.SIGUSR1, lambda signum, frame: setattr(self, "_reset_requested", True))
         signal.signal(signal.SIGUSR2, lambda signum, frame: self.elastic_band.MujuocoKeyCallback(glfw.KEY_9))
@@ -167,12 +173,39 @@ class FalconLocoManipCamSimulator:
                 q = self.mj_data.qpos
                 pose = (self.mj_data.time, q[0], q[1], q[2], yaw_from_wxyz(q[3], q[4], q[5], q[6]))
                 self._pose_sock.sendto(struct.pack(POSE_FORMAT, *pose), (UDP_HOST, POSE_PORT))
+                if self.height_scan_enabled:
+                    scan = self.compute_height_scan()
+                    self._pose_sock.sendto(
+                        struct.pack(height_scan.PACKET_FORMAT, self.mj_data.time, *scan),
+                        (height_scan.HOST, height_scan.PORT),
+                    )
             sim_cnt += 1
             if sim_cnt % 1000 == 0:
                 end_time = time.time()
                 self.logger.info(f"FPS: {1000 / (end_time - start_time):.2f}")
                 start_time = end_time
             self.rate.sleep()
+
+    def compute_height_scan(self) -> np.ndarray:
+        """pelvis_z - 0.7 - terrain_z on the teachers' yaw-aligned 16 x 10 grid, clipped to [-0.5, 0.5].
+
+        One vertical ray per grid point against the terrain geoms only (geom group 2), from 5 m down.
+        """
+        q = self.mj_data.qpos
+        yaw = yaw_from_wxyz(q[3], q[4], q[5], q[6])
+        c, s = np.cos(yaw), np.sin(yaw)
+        px = q[0] + c * height_scan.GRID_X - s * height_scan.GRID_Y
+        py = q[1] + s * height_scan.GRID_X + c * height_scan.GRID_Y
+        top, down = 5.0, np.array([0.0, 0.0, -1.0])
+        terrain_z = np.empty(height_scan.NUM_POINTS)
+        for i in range(height_scan.NUM_POINTS):
+            dist = mujoco.mj_ray(
+                self.mj_model, self.mj_data, np.array([px[i], py[i], top]), down,
+                self._terrain_geomgroup, 1, -1, self._ray_geomid,
+            )
+            terrain_z[i] = top - dist if dist >= 0 else -np.inf  # no hit: clipped to +0.5 below, like training
+        rel = q[2] - height_scan.LIDAR_HEIGHT_OFFSET - terrain_z
+        return np.clip(rel, -height_scan.CLIP, height_scan.CLIP)
 
     def record_video(self, filename="simulation.mp4"):
         """Follow camera on the torso at VIEWER_DT; frames are written while the band's ``R`` toggle is on."""

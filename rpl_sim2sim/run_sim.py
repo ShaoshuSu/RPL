@@ -47,6 +47,8 @@ def main() -> None:
     ap.add_argument("--spawn", type=float, nargs=3, default=None, metavar=("X", "Y", "Z"),
                     help="pelvis start position; the band anchor moves above it (FALCON: 2.5 -2 1.893)")  # fmt: skip
     ap.add_argument("--video", default="logs/sim2sim/simulation.mp4", help="where R-toggled video is written")
+    ap.add_argument("--height-scan", action="store_true",
+                    help="send the terrain teachers' height map over UDP (rpl_sim2sim/height_scan.py)")  # fmt: skip
     args = ap.parse_args()
 
     config = load_config(args.config)
@@ -62,6 +64,7 @@ def main() -> None:
     from rpl_sim2sim.simulator import FalconLocoManipCamSimulator
 
     simulator = FalconLocoManipCamSimulator(config, video_path=args.video)
+    simulator.height_scan_enabled = args.height_scan
     if args.spawn is not None:
         simulator.spawn = args.spawn  # SIGUSR1 reset returns here
         simulator.mj_data.qpos[:3] = args.spawn
